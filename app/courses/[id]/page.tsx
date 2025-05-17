@@ -1,15 +1,59 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { courses } from "@/data/coursesData"; // Import the course data
+import axios from "axios";
 
 export default function CourseDetailsPage() {
   const params = useParams();
-  const courseId = Array.isArray(params.id) ? params.id[0] : params.id; // Ensure `params.id` is a string
-  const course = courses.find(
-    (course) => course.id === parseInt(courseId || "0")
-  );
+  const courseId = Array.isArray(params.id) ? params.id[0] : params.id;
+
+  const [course, setCourse] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+
+  useEffect(() => {
+    const fetchCourse = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+        const res = await axios.get(`${apiUrl}/api/courses/${courseId}`);
+        setCourse(res.data);
+      } catch (err) {
+        setCourse(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourse();
+  }, [courseId]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // No enroll API, just close modal and show alert
+  const handleEnroll = async (e: React.FormEvent) => {
+    e.preventDefault();
+    alert(
+      "Enrollment is handled externally. Please use the enroll link below."
+    );
+    setIsModalOpen(false);
+    setFormData({ name: "", email: "", phone: "" });
+  };
+
+  if (loading) {
+    return (
+      <main className="min-h-screen text-white flex items-center justify-center">
+        <h1 className="text-2xl font-bold">Loading...</h1>
+      </main>
+    );
+  }
 
   if (!course) {
     return (
@@ -54,7 +98,7 @@ export default function CourseDetailsPage() {
             Prerequisites
           </h3>
           <ul className="list-disc list-inside text-gray-300">
-            {course.prerequisites.map((item, index) => (
+            {course.prerequisites?.map((item: string, index: number) => (
               <li key={index}>{item}</li>
             ))}
           </ul>
@@ -66,7 +110,7 @@ export default function CourseDetailsPage() {
             Learning Objectives
           </h3>
           <ul className="list-disc list-inside text-gray-300">
-            {course.learningObjectives.map((item, index) => (
+            {course.learningObjectives?.map((item: string, index: number) => (
               <li key={index}>{item}</li>
             ))}
           </ul>
@@ -86,7 +130,7 @@ export default function CourseDetailsPage() {
             User Reviews
           </h3>
           <div className="space-y-4">
-            {course.userReviews.map((review, index) => (
+            {course.userReviews?.map((review: any, index: number) => (
               <div
                 key={index}
                 className="bg-black border border-gray-600 p-4 rounded-lg hover:shadow-orange-500 hover:border-none shadow-md"
@@ -109,9 +153,14 @@ export default function CourseDetailsPage() {
             </h3>
           </div>
           <div className="flex flex-col md:flex-row gap-4">
-            <button className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg">
-              Enroll Now
-            </button>
+            <a
+              href={course.enrollLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg text-center"
+            >
+              Enroll Externally
+            </a>
             <button className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded-lg">
               Add to Wishlist
             </button>

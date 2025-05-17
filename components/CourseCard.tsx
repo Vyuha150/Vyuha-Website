@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 
 interface Course {
-  id: number;
+  _id: any;
   title: string;
   instructor: string;
   instructorPhoto: string;
@@ -17,11 +17,11 @@ interface Course {
 
 export default function CourseCard({ course }: { course: Course }) {
   return (
-    <div className="bg-black border border-gray-700 rounded-lg shadow-lg hover:shadow-orange-500/20 transition-all overflow-hidden">
+    <div className="bg-black border border-gray-700 rounded-lg shadow-lg hover:shadow-orange-500 transition-all overflow-hidden hover:scale-105 transform duration-300">
       {/* Course Image */}
       <div className="relative h-40 bg-gray-700">
         <img
-          src={`/course${1 || course.id}.jpg`} // Assuming images are named as course1.jpg, course2.jpg, etc.
+          src={`/course${1 || course._id}.jpg`} // Assuming images are named as course1.jpg, course2.jpg, etc.
           alt={course.title}
           className="w-full h-full object-cover"
         />
@@ -34,7 +34,7 @@ export default function CourseCard({ course }: { course: Course }) {
       <div className="p-4">
         {/* Title */}
         <h2 className="text-lg font-bold text-white mb-2">
-          <Link href={`/courses/${course.id}`}>{course.title}</Link>
+          <Link href={`/courses/${course._id}`}>{course.title}</Link>
         </h2>
 
         {/* Instructor Info */}
@@ -62,7 +62,7 @@ export default function CourseCard({ course }: { course: Course }) {
         <p className="text-sm text-gray-400 mb-4">{course.description}</p>
 
         {/* Action Button */}
-        <Link href={`/courses/${course.id}`}>
+        <Link href={`/courses/${course._id}`}>
           <button className="w-full py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg">
             View Details
           </button>

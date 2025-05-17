@@ -11,6 +11,8 @@ import {
   Award,
   Handshake,
   Share2,
+  Globe,
+  Briefcase,
 } from "lucide-react";
 
 export default function FeaturesPage() {
@@ -39,7 +41,7 @@ export default function FeaturesPage() {
         "Boost your team's capabilities with certified workshops, digital tools, and leadership bootcamps tailored for student organizations.",
       highlight:
         "Exclusive access to digital marketing, communication, and event management programs.",
-      link: "/skills",
+      link: "/courses",
     },
     {
       icon: <Award className="w-8 h-8" />,
@@ -48,7 +50,7 @@ export default function FeaturesPage() {
         "Your work deserves applause. Get recognized for your innovation, impact, and student-led movements.",
       highlight:
         "Digital badges, features on Vyuha socials, and leadership showcases.",
-      link: "/recognition",
+      link: "/projects",
     },
     {
       icon: <Handshake className="w-8 h-8" />,
@@ -56,7 +58,23 @@ export default function FeaturesPage() {
       description:
         "Vyuha acts as a bridge between student communities and real-world changemakers.",
       highlight: "Partner for impact projects, internships, and initiatives.",
-      link: "/partnerships",
+      link: "/membership",
+    },
+    {
+      icon: <Briefcase className="w-8 h-8" />,
+      title: "Work with Experts",
+      description:
+        "Collaborate with retired scientists, professionals, and government administrators.",
+      highlight: "Gain insights and mentorship from experienced leaders.",
+      link: "/mentorship",
+    },
+    {
+      icon: <Globe className="w-8 h-8" />,
+      title: "Shape the World",
+      description:
+        "Be a part of prestigious projects capable of making a global impact.",
+      highlight: "Contribute to initiatives that drive meaningful change.",
+      link: "/projects",
     },
   ];
 
@@ -89,12 +107,17 @@ export default function FeaturesPage() {
             {features.map((feature, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                whileHover={{ scale: 1.02 }}
+                initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{
+                  scale: 1.02,
+                  rotate: 1,
+                  boxShadow: "0px 10px 20px rgba(255, 165, 0, 0.5)",
+                }}
+                whileTap={{ scale: 0.98 }}
               >
-                <Card className="h-full bg-black/70 text-white hover:shadow-orange-500 transition-all duration-200 hover:border-none">
+                <Card className="h-full bg-black/70 text-white hover:shadow-orange-500 transition-all duration-300 hover:border-none rounded-lg">
                   <CardHeader>
                     <div className="w-16 h-16 rounded-lg bg-orange-500/20 flex items-center justify-center mb-4">
                       {feature.icon}

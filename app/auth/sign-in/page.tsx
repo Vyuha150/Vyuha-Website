@@ -20,7 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import axios from "axios";
-import { ro } from "date-fns/locale";
+import Cookies from "js-cookie";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -40,47 +40,41 @@ export default function SignInPage() {
     },
   });
 
-  // const onSubmit = async (values: z.infer<typeof formSchema>) => {
-  //   setIsSubmitting(true);
-  //   try {
-  //     // Get the API URL from environment variables
-  //     const apiUrl = process.env.NEXT_PUBLIC_API_URL + "/api/auth/login";
-
-  //     // Make API call to authenticate the user
-  //     const response = await axios.post(apiUrl, values);
-
-  //     if (response.status === 200) {
-  //       const { token, userId } = response.data;
-
-  //       // Store the token and userId in sessionStorage
-  //       sessionStorage.setItem("authToken", token);
-  //       sessionStorage.setItem("userId", userId);
-
-  //       alert("Sign-in successful! Redirecting to the home page...");
-  //       router.push("/"); // Navigate to the home page
-  //     } else {
-  //       alert("Invalid email or password. Please try again.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error during sign-in:", error);
-
-  //     // Handle specific error messages from the API
-  //     if (axios.isAxiosError(error) && error.response) {
-  //       alert(
-  //         error.response.data.message || "An error occurred. Please try again."
-  //       );
-  //     } else {
-  //       alert("An error occurred. Please try again later.");
-  //     }
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
-    console.log("Form submitted:", values); // Log the form values
-    router.push("/"); // Redirect to the home page after form submission
+    try {
+      // Get the API URL from environment variables
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL + "/api/auth/login";
+
+      // Make API call to authenticate the user
+      const response = await axios.post(apiUrl, values);
+
+      if (response.status === 200) {
+        const { token, userId } = response.data;
+
+        // Store the token and userId in sessionStorage
+        Cookies.set("authToken", token, { path: "/", expires: 1 / 24 }); // Expires in 1 hour
+        Cookies.set("userId", userId, { path: "/", expires: 1 / 24 });
+
+        alert("Sign-in successful! Redirecting to the home page...");
+        router.push("/"); // Navigate to the home page
+      } else {
+        alert("Invalid email or password. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error during sign-in:", error);
+
+      // Handle specific error messages from the API
+      if (axios.isAxiosError(error) && error.response) {
+        alert(
+          error.response.data.message || "An error occurred. Please try again."
+        );
+      } else {
+        alert("An error occurred. Please try again later.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

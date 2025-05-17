@@ -21,10 +21,14 @@
     "@react-three/drei": "^10.0.5",
     "@react-three/fiber": "^9.1.1",
     "axios": "^1.9.0",
+    "browser-image-compression": "^2.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^2.30.0",
     "framer-motion": "^12.8.0",
+    "js-cookie": "^3.0.5",
+    "jspdf": "^3.0.1",
+    "jwt-decode": "^4.0.0",
     "lucide-react": "^0.487.0",
     "motion": "^12.6.3",
     "next": "^15.2.4",
@@ -39,6 +43,7 @@
     "zod": "^3.24.3"
   },
   "devDependencies": {
+    "@types/js-cookie": "^3.0.6",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

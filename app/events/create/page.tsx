@@ -3,6 +3,8 @@
 import React, { useState, ChangeEvent, FormEvent } from "react";
 import { useRouter } from "next/navigation"; // For navigation after submission
 import { motion } from "framer-motion";
+import axios from "axios";
+import Cookies from "js-cookie"; // For handling cookies
 
 interface FormData {
   name: string;
@@ -18,6 +20,8 @@ interface FormData {
   platformLink: string;
   organizer: string;
   organizerBio: string;
+  organizerPhoto: File | null;
+  image: File | null;
   logo: File | null;
 }
 
@@ -37,9 +41,13 @@ export default function CreateEventPage() {
     organizer: "",
     organizerBio: "",
     logo: null,
+    image: null,
+    organizerPhoto: null,
   });
-
-  const router = useRouter(); // For navigation
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const handleInputChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -54,25 +62,65 @@ export default function CreateEventPage() {
     }
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
 
-    // Save the event data to local storage
-    const existingEvents = JSON.parse(localStorage.getItem("events") || "[]");
-    const newEvent = { ...formData, id: Date.now() }; // Add a unique ID
-    localStorage.setItem(
-      "events",
-      JSON.stringify([...existingEvents, newEvent])
-    );
+    try {
+      const authToken = Cookies.get("authToken"); // Retrieve token from Cookies
+      // Prepare form data for submission
+      const eventData = new FormData();
+      eventData.append("name", formData.name);
+      eventData.append("date", formData.date);
+      eventData.append("time", formData.time);
+      eventData.append("location", formData.location);
+      eventData.append("category", formData.category);
+      eventData.append("mode", formData.mode);
+      eventData.append("targetAudience", formData.targetAudience);
+      eventData.append("description", formData.description);
+      eventData.append("fees", formData.fees);
+      eventData.append("materials", formData.materials);
+      eventData.append("platformLink", formData.platformLink);
+      eventData.append("organizer", formData.organizer);
+      eventData.append("organizerBio", formData.organizerBio);
+      if (formData.organizerPhoto) {
+        eventData.append("organizerPhoto", formData.organizerPhoto);
+      }
+      if (formData.image) {
+        eventData.append("image", formData.image);
+      }
+      if (formData.logo) {
+        eventData.append("logo", formData.logo);
+      }
 
-    // Navigate to the events page
-    router.push("/events");
+      // Send the data to the backend
+      const response = await axios.post(`${apiUrl}/api/events`, eventData, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      if (response.status === 201) {
+        // Navigate to the events page after successful creation
+        router.push("/events");
+      }
+    } catch (err: any) {
+      console.error("Error creating event:", err);
+      setError(
+        err.response?.data?.message ||
+          "An error occurred while creating the event."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <main className="min-h-screen text-white">
       <section className="py-12 px-4 md:py-16 md:px-6 lg:px-8">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -95,7 +143,7 @@ export default function CreateEventPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   placeholder="Enter event name"
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 />
               </div>
 
@@ -110,7 +158,7 @@ export default function CreateEventPage() {
                   name="date"
                   value={formData.date}
                   onChange={handleInputChange}
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 />
               </div>
 
@@ -125,7 +173,7 @@ export default function CreateEventPage() {
                   name="time"
                   value={formData.time}
                   onChange={handleInputChange}
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 />
               </div>
 
@@ -141,7 +189,7 @@ export default function CreateEventPage() {
                   value={formData.location}
                   onChange={handleInputChange}
                   placeholder="Enter event location"
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 />
               </div>
 
@@ -155,7 +203,7 @@ export default function CreateEventPage() {
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 >
                   <option value="" disabled>
                     Select a category
@@ -177,7 +225,7 @@ export default function CreateEventPage() {
                   name="mode"
                   value={formData.mode}
                   onChange={handleInputChange}
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 >
                   <option value="" disabled>
                     Select a mode
@@ -200,7 +248,7 @@ export default function CreateEventPage() {
                   name="targetAudience"
                   value={formData.targetAudience}
                   onChange={handleInputChange}
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 >
                   <option value="" disabled>
                     Select target audience
@@ -226,7 +274,7 @@ export default function CreateEventPage() {
                   onChange={handleInputChange}
                   placeholder="Enter event description"
                   rows={4}
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 ></textarea>
               </div>
 
@@ -242,7 +290,7 @@ export default function CreateEventPage() {
                   value={formData.fees}
                   onChange={handleInputChange}
                   placeholder="Enter event fees (e.g., Free, $50)"
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 />
               </div>
 
@@ -261,7 +309,7 @@ export default function CreateEventPage() {
                   value={formData.materials}
                   onChange={handleInputChange}
                   placeholder="Enter required materials (e.g., Laptop)"
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 />
               </div>
 
@@ -280,7 +328,7 @@ export default function CreateEventPage() {
                   value={formData.platformLink}
                   onChange={handleInputChange}
                   placeholder="Enter platform link (e.g., Zoom, Google Meet)"
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 />
               </div>
 
@@ -299,7 +347,49 @@ export default function CreateEventPage() {
                   value={formData.organizer}
                   onChange={handleInputChange}
                   placeholder="Enter organizer name"
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                />
+              </div>
+
+              {/* Organizer Photo */}
+              <div>
+                <label
+                  htmlFor="organizerPhoto"
+                  className="block text-md font-medium"
+                >
+                  Organizer Photo
+                </label>
+                <input
+                  type="file"
+                  id="organizerPhoto"
+                  name="organizerPhoto"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      setFormData({
+                        ...formData,
+                        organizerPhoto: e.target.files[0],
+                      });
+                    }
+                  }}
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                />
+              </div>
+
+              {/* Event Image */}
+              <div>
+                <label htmlFor="image" className="block text-md font-medium">
+                  Event Image
+                </label>
+                <input
+                  type="file"
+                  id="image"
+                  name="image"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      setFormData({ ...formData, image: e.target.files[0] });
+                    }
+                  }}
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 />
               </div>
 
@@ -318,7 +408,7 @@ export default function CreateEventPage() {
                   onChange={handleInputChange}
                   placeholder="Enter organizer bio"
                   rows={3}
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 ></textarea>
               </div>
 
@@ -332,7 +422,7 @@ export default function CreateEventPage() {
                   id="logo"
                   name="logo"
                   onChange={handleFileChange}
-                  className="w-full mt-2 p-3 bg-black border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  className="w-full mt-2 p-[6px] bg-black border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                 />
               </div>
 
@@ -341,9 +431,12 @@ export default function CreateEventPage() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 type="submit"
-                className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md transition-transform"
+                disabled={loading}
+                className={`w-full py-3 ${
+                  loading ? "bg-gray-500" : "bg-orange-500 hover:bg-orange-600"
+                } text-white font-semibold rounded-lg shadow-md transition-transform`}
               >
-                Post Event
+                {loading ? "Posting..." : "Post Event"}
               </motion.button>
             </form>
           </motion.div>

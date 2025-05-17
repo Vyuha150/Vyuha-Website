@@ -8,31 +8,50 @@ import {
   MapPin,
   Clock,
   Calendar as CalendarIcon,
-  Share2,
   Facebook,
   Twitter,
   Linkedin,
 } from "lucide-react";
 import Link from "next/link";
-import { events, Event } from "@/data/eventData";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import axios from "axios";
 
 export default function EventDetailsPage() {
-  const { id } = useParams(); // Get the event ID from the URL
-  const [event, setEvent] = useState<Event | null>(null);
+  const { id } = useParams();
+  const [event, setEvent] = useState<any | null>(null);
   const [timeLeft, setTimeLeft] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
 
-  // Fetch event details
+  // Fetch event details from the backend
   useEffect(() => {
-    const eventId = parseInt(id as string, 10);
-    const selectedEvent = events.find((event) => event.id === eventId);
-    setEvent(selectedEvent || null);
-
-    // Countdown Timer
-    if (selectedEvent) {
-      const calculateTimeLeft = () => {
-        const eventDate = new Date(
-          `${selectedEvent.date} ${selectedEvent.time}`
+    const fetchEvent = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/events/${id}`
         );
+        if (response.status === 200) {
+          setEvent(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching event:", error);
+      }
+    };
+
+    fetchEvent();
+  }, [id]);
+
+  // Countdown Timer
+  useEffect(() => {
+    if (event) {
+      const calculateTimeLeft = () => {
+        const eventDate = new Date(`${event.date} ${event.time}`);
         const now = new Date();
         const difference = eventDate.getTime() - now.getTime();
 
@@ -50,7 +69,40 @@ export default function EventDetailsPage() {
       const timer = setInterval(calculateTimeLeft, 60000); // Update every minute
       return () => clearInterval(timer);
     }
-  }, [id]);
+  }, [event]);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/events/register`,
+        {
+          eventId: id,
+          ...formData,
+        }
+      );
+
+      if (response.status === 200) {
+        alert("Registration successful!");
+        setIsModalOpen(false);
+        setFormData({ name: "", email: "", phone: "", message: "" });
+      }
+    } catch (error: any) {
+      if (error.response && error.response.status === 400) {
+        alert(error.response.data.message);
+      } else {
+        console.error("Error registering for event:", error);
+        alert("An error occurred. Please try again.");
+      }
+    }
+  };
 
   if (!event) {
     return <p className="text-center text-gray-500">Event not found.</p>;
@@ -62,7 +114,7 @@ export default function EventDetailsPage() {
         {/* Event Image */}
         <div className="relative w-full h-64 md:h-96 mb-8">
           <img
-            src={event.image}
+            src={`${process.env.NEXT_PUBLIC_API_URL}${event.image}`}
             alt={event.name}
             className="w-full h-full object-cover rounded-lg shadow-lg"
           />
@@ -110,7 +162,7 @@ export default function EventDetailsPage() {
             {/* Fees and Materials */}
             <div className="mt-6">
               <h3 className="text-lg font-bold mb-2">Fees</h3>
-              <p className="text-gray-300">{event.fees || "Free"}</p>
+              <p className="text-gray-300">${event.fees || "Free"}</p>
               <h3 className="text-lg font-bold mt-4 mb-2">Materials</h3>
               <p className="text-gray-300">
                 {event.materials || "No materials required"}
@@ -122,6 +174,7 @@ export default function EventDetailsPage() {
               <Button
                 size="lg"
                 className="bg-orange-500 hover:bg-orange-600 hover:scale-105 duration-300 w-full"
+                onClick={() => setIsModalOpen(true)}
               >
                 Register Now
               </Button>
@@ -133,7 +186,7 @@ export default function EventDetailsPage() {
             {/* Organizer Info */}
             <div className="flex items-center gap-4 mb-6">
               <img
-                src={event.organizerPhoto}
+                src={`${process.env.NEXT_PUBLIC_API_URL}${event.organizerPhoto}`}
                 alt={event.organizer}
                 className="w-16 h-16 rounded-full object-cover"
               />
@@ -199,6 +252,97 @@ export default function EventDetailsPage() {
           </div>
         </div>
       </div>
+
+      {/* Registration Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+          <div className="bg-black p-8 rounded-lg shadow-lg w-full max-w-md border border-orange-500">
+            <h2 className="text-2xl font-bold mb-4 text-white">
+              Register for {event.name}
+            </h2>
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Name
+                </label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Your name"
+                  className="rounded-lg"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Your email"
+                  className="rounded-lg"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Phone
+                </label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="Your phone number"
+                  className="rounded-lg"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="message"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Message (Optional)
+                </label>
+                <Textarea
+                  id="message"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  placeholder="Any additional message"
+                  rows={3}
+                  className="rounded-lg"
+                />
+              </div>
+              <div className="flex justify-end gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-300 border-gray-300"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-orange-500 text-white">
+                  Register
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

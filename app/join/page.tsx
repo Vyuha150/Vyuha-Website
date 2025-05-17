@@ -24,14 +24,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import {
-  Award,
-  Users,
-  Megaphone,
-  Rocket,
-  GraduationCap,
-  Upload,
-} from "lucide-react";
+import { Award, Users, Megaphone, Rocket, GraduationCap } from "lucide-react";
+import axios from "axios";
 
 const formSchema = z.object({
   organizationName: z
@@ -51,19 +45,59 @@ export default function JoinPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
+    defaultValues: {
+      organizationName: "",
+      collegeUniversity: "",
+      organizationType: "",
+      activeMembers: "",
+      pastEvents: "",
+      contactName: "",
+      contactEmail: "",
+      contactPhone: "",
+      logo: [],
+    },
     resolver: zodResolver(formSchema),
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      // Here we'll add the registration logic
-      console.log(values);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      alert("Registration submitted successfully!");
-    } catch (error) {
-      console.error(error);
-      alert("Error submitting form. Please try again.");
+      // Create FormData to handle file uploads
+      const formData = new FormData();
+      formData.append("organizationName", values.organizationName);
+      formData.append("collegeUniversity", values.collegeUniversity);
+      formData.append("organizationType", values.organizationType);
+      formData.append("activeMembers", values.activeMembers);
+      formData.append("pastEvents", values.pastEvents);
+      formData.append("contactName", values.contactName);
+      formData.append("contactEmail", values.contactEmail);
+      formData.append("contactPhone", values.contactPhone);
+
+      if (values.logo && values.logo[0]) {
+        formData.append("logo", values.logo[0]); // Append the logo file
+      }
+
+      // Send the form data to the backend
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/organization/register`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        alert("Registration submitted successfully!");
+        form.reset(); // Reset the form
+      }
+    } catch (error: any) {
+      console.error("Error submitting form:", error);
+      alert(
+        error.response?.data?.message ||
+          "Error submitting form. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -133,7 +167,7 @@ export default function JoinPage() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 whileHover={{ translateY: -8 }}
               >
-                <Card className="p-6 h-full bg-black text-white hover:shadow-orange-500/50 transition-shadow duration-300 hover:-translate-y-2 hover:border-none hover:shadow-lg">
+                <Card className="p-6 h-full bg-black text-white hover:shadow-orange-500 transition-all duration-300 hover:-translate-y-2 hover:border-none hover:shadow-lg transform">
                   <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center mb-4">
                     {benefit.icon}
                   </div>
@@ -155,7 +189,9 @@ export default function JoinPage() {
             transition={{ duration: 0.5 }}
           >
             <Card className="p-6 bg-black text-white hover:shadow-orange-500/50 transition-shadow duration-300 hover:border-none hover:shadow-lg">
-              <h2 className="text-2xl font-bold mb-6">Registration Form</h2>
+              <h2 className="text-2xl font-bold mb-6 text-orange-500">
+                Registration Form
+              </h2>
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
@@ -326,7 +362,11 @@ export default function JoinPage() {
                         <FormControl className="cursor-pointer">
                           <Input
                             type="file"
-                            {...field}
+                            onChange={(e) =>
+                              field.onChange(
+                                e.target.files ? e.target.files : []
+                              )
+                            }
                             className="bg-black text-white border-gray-700 file:mr-4 file:py-1 file:px-4 file:rounded-lg file:border-0 file:bg-orange-500 file:text-white hover:file:bg-orange-600"
                           />
                         </FormControl>

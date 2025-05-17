@@ -11,35 +11,47 @@ import {
   Settings,
   ChevronDown,
   LogOut,
-} from "lucide-react"; // Added Bell and Settings icons
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "/public/logo.png";
 import { usePathname, useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 const navLinks = [
   { name: "Home", href: "/" },
-  { name: "Our Portfolio", href: "/origin" },
-
-  { name: "Membership", href: "/membership" },
-  { name: "Organization", href: "/organization" },
-  { name: "Events", href: "/events" }, // Added Events
-  { name: "Contact", href: "/contact" }, // Added Contact
+  { name: "Portfolio", href: "/origin" },
+  { name: "Events", href: "/events" },
+  { name: "Clubs", href: "/club-partner" },
 ];
 
 const connectLinks = [
-  { name: "Connect and Challenge", href: "/club-partner" },
+  { name: "Membership", href: "/membership" },
   { name: "Podcast Connect", href: "/podcast-partner" },
-  { name: "Path", href: "/path" },
-  { name: "path-preview", href: "/path-preview" },
-  { name: "organizations", href: "/organizations" },
+  { name: "Career Boost", href: "/path" },
+  { name: "Path Preview", href: "/path-preview" },
+  { name: "Organizations", href: "/organizations" },
+];
+
+const additionalLinks = [
+  { name: "Careers", href: "/career" },
+  { name: "Resources", href: "/organization" },
+  { name: "Courses", href: "/courses" },
+  { name: "Vyuha Features", href: "/features" },
+  { name: "Vyuha Community Forum", href: "/forum" },
+  { name: "Mentorship", href: "/mentorship" },
+  { name: "Opportunities", href: "/opportunities" },
+  { name: "Projects", href: "/projects" },
+  { name: "Join Vyuha", href: "/join" },
+  { name: "Contact", href: "/contact" },
 ];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(true); // State to track login status
-  const [showProfileMenu, setShowProfileMenu] = useState(false); // State for profile dropdown
-  const [showConnectMenu, setShowConnectMenu] = useState(false); // State for Connect dropdown
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showConnectMenu, setShowConnectMenu] = useState(false);
+  const [showAdditionalMenu, setShowAdditionalMenu] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -51,13 +63,13 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // // Check login status on the client side
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     const authToken = sessionStorage.getItem("authToken");
-  //     setIsLoggedIn(!!authToken); // Set to true if authToken exists
-  //   }
-  // }, []);
+  // Check login status on the client side
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const authToken = Cookies.get("authToken");
+      setIsLoggedIn(!!authToken);
+    }
+  }, []);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -66,9 +78,10 @@ export default function Navbar() {
 
   // Handle Logout
   const handleLogout = () => {
-    sessionStorage.removeItem("authToken"); // Clear session storage
-    // setIsLoggedIn(false); // Update login state
-    router.push("/auth/sign-in"); // Navigate to sign-in page
+    Cookies.remove("authToken");
+    Cookies.remove("userId");
+    setIsLoggedIn(false);
+    router.push("/auth/sign-in");
   };
 
   return (
@@ -125,88 +138,124 @@ export default function Navbar() {
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center space-x-6">
-          {isLoggedIn ? (
-            <>
-              {navLinks.map((link, i) => {
-                const isActive = pathname === link.href;
-                return (
-                  <motion.div
-                    key={link.name}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.05 * i }}
-                  >
+          {navLinks.map((link, i) => {
+            const isActive = pathname === link.href;
+            return (
+              <motion.div
+                key={link.name}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 * i }}
+              >
+                <Link
+                  href={link.href}
+                  className={`relative text-sm font-medium transition-all duration-200 group ${
+                    isActive ? "text-orange-400" : "text-white"
+                  }`}
+                >
+                  {link.name}
+                  <span
+                    className={`absolute -bottom-1 left-0 h-[2px] bg-gradient-to-r from-orange-500 to-pink-500 transition-all duration-300 ${
+                      isActive ? "w-full" : "w-0 group-hover:w-full"
+                    }`}
+                  ></span>
+                </Link>
+              </motion.div>
+            );
+          })}
+
+          {/* Connect Dropdown */}
+          <div
+            className="relative"
+            onMouseEnter={() => setShowConnectMenu(true)}
+            onMouseLeave={() => setShowConnectMenu(false)}
+          >
+            <button className="flex items-center space-x-2 text-sm font-medium text-white transition-all">
+              <span>Connect</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
+
+            {/* Dropdown Menu */}
+            <AnimatePresence>
+              {showConnectMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 mt-2 w-48 bg-[#0c0c0ccc] border border-white/10 rounded-lg shadow-lg overflow-hidden"
+                >
+                  {connectLinks.map((link) => (
                     <Link
+                      key={link.name}
                       href={link.href}
-                      className={`relative text-sm font-medium transition-all duration-200 group ${
-                        isActive ? "text-orange-400" : "text-white"
-                      }`}
+                      className="block px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
                     >
                       {link.name}
-                      <span
-                        className={`absolute -bottom-1 left-0 h-[2px] bg-gradient-to-r from-orange-500 to-pink-500 transition-all duration-300 ${
-                          isActive ? "w-full" : "w-0 group-hover:w-full"
-                        }`}
-                      ></span>
                     </Link>
-                  </motion.div>
-                );
-              })}
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-              <div
-                className="relative"
-                onMouseEnter={() => setShowConnectMenu(true)}
-                onMouseLeave={() => setShowConnectMenu(false)}
-              >
-                <button className="flex items-center space-x-2 text-sm font-medium text-white transition-all">
-                  <span>Connect</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
+          {/* Additional Dropdown */}
+          <div
+            className="relative"
+            onMouseEnter={() => setShowAdditionalMenu(true)}
+            onMouseLeave={() => setShowAdditionalMenu(false)}
+          >
+            <button className="flex items-center space-x-2 text-sm font-medium text-white transition-all">
+              <span>More</span>
+              <ChevronDown className="w-4 h-4" />
+            </button>
 
-                {/* Dropdown Menu */}
-                <AnimatePresence>
-                  {showConnectMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-2 w-48 bg-[#0c0c0ccc] border border-white/10 rounded-lg shadow-lg overflow-hidden"
-                    >
-                      {connectLinks.map((link) => (
-                        <Link
-                          key={link.name}
-                          href={link.href}
-                          className="block px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
-                        >
-                          {link.name}
-                        </Link>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Profile Button */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowProfileMenu(!showProfileMenu)}
-                  className="flex items-center space-x-2 text-sm font-medium text-white px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg hover:shadow-orange-500/20 transition-all"
+            {/* Dropdown Menu */}
+            <AnimatePresence>
+              {showAdditionalMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 mt-2 w-48 bg-[#0c0c0ccc] border border-white/10 rounded-lg shadow-lg overflow-hidden"
                 >
-                  <User className="w-5 h-5" />
-                  <span>Profile</span>
-                </button>
-
-                {/* Profile Dropdown */}
-                <AnimatePresence>
-                  {showProfileMenu && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute right-0 mt-2 w-48 bg-[#0c0c0ccc] border border-white/10 rounded-lg shadow-lg overflow-hidden"
+                  {additionalLinks.map((link) => (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      className="block px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
                     >
+                      {link.name}
+                    </Link>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Profile Button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowProfileMenu(!showProfileMenu)}
+              className="flex items-center space-x-2 text-sm font-medium text-white px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg hover:shadow-orange-500/20 transition-all"
+            >
+              <User className="w-5 h-5" />
+              <span>Profile</span>
+            </button>
+
+            {/* Profile Dropdown */}
+            <AnimatePresence>
+              {showProfileMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute right-0 mt-2 w-48 bg-[#0c0c0ccc] border border-white/10 rounded-lg shadow-lg overflow-hidden"
+                >
+                  {isLoggedIn ? (
+                    <>
                       <Link
                         href="/profile"
                         className="block px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
@@ -238,42 +287,29 @@ export default function Navbar() {
                         <LogOut className="inline w-4 h-4 mr-2" />
                         <span>Logout</span>
                       </button>
-                    </motion.div>
+                    </>
+                  ) : (
+                    <>
+                      <Link
+                        href="/auth/sign-in"
+                        className="block px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        Sign In
+                      </Link>
+                      <Link
+                        href="/auth/sign-up"
+                        className="block px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        Sign Up
+                      </Link>
+                    </>
                   )}
-                </AnimatePresence>
-              </div>
-            </>
-          ) : (
-            <>
-              {/* Sign In Button */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Link
-                  href="/auth/sign-in"
-                  className="text-sm font-medium text-white px-4 py-2 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:shadow-lg hover:shadow-orange-500/20 hover:brightness-110 transition-all"
-                >
-                  Sign In
-                </Link>
-              </motion.div>
-
-              {/* Sign Up Button */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.4 }}
-              >
-                <Link
-                  href="/auth/sign-up"
-                  className="text-sm font-medium text-orange-500 px-4 py-2 rounded-full border border-orange-500 hover:bg-gradient-to-r from-orange-500 to-orange-600 hover:text-white hover:shadow-lg hover:shadow-pink-500/20 transition-all"
-                >
-                  Sign Up
-                </Link>
-              </motion.div>
-            </>
-          )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -284,50 +320,129 @@ export default function Navbar() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.3 }}
-              className="absolute top-full left-0 w-full bg-[#0c0c0ccc] border-t border-white/10 rounded-b-lg shadow-lg md:hidden"
+              className="absolute top-full left-0 w-full bg-[#0c0c0ccc] border-t border-white/10 rounded-b-lg shadow-lg md:hidden rounded-lg"
             >
-              <div className="flex flex-col space-y-4 p-4">
-                {isLoggedIn
-                  ? navLinks.map((link) => (
+              <div className="flex flex-col p-4">
+                {/* Main Links */}
+                <div>
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      className={`flex items-center space-x-2 text-sm font-medium transition-all duration-200 mb-2 ${
+                        pathname === link.href
+                          ? "text-orange-400"
+                          : "text-white"
+                      }`}
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <span>{link.name}</span>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Connect Links Dropdown */}
+                <div>
+                  <button
+                    onClick={() => setShowConnectMenu(!showConnectMenu)}
+                    className="flex items-center justify-between w-full text-sm font-bold text-white mb-2"
+                  >
+                    Connect
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform ${
+                        showConnectMenu ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  <AnimatePresence>
+                    {showConnectMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="pl-4 space-y-2"
+                      >
+                        {connectLinks.map((link) => (
+                          <Link
+                            key={link.name}
+                            href={link.href}
+                            className="block text-sm font-medium text-white hover:text-orange-400 transition-all"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            {link.name}
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* More Links Dropdown */}
+                <div>
+                  <button
+                    onClick={() => setShowAdditionalMenu(!showAdditionalMenu)}
+                    className="flex items-center justify-between w-full text-sm font-bold text-white mb-2"
+                  >
+                    More
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform ${
+                        showAdditionalMenu ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  <AnimatePresence>
+                    {showAdditionalMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="pl-4 space-y-2"
+                      >
+                        {additionalLinks.map((link) => (
+                          <Link
+                            key={link.name}
+                            href={link.href}
+                            className="block text-sm font-medium text-white hover:text-orange-400 transition-all"
+                            onClick={() => setIsOpen(false)}
+                          >
+                            {link.name}
+                          </Link>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Profile Section */}
+                <div className="border-t border-white/10 pt-4">
+                  {isLoggedIn ? (
+                    <button
+                      onClick={handleLogout}
+                      className="text-sm font-medium text-white hover:text-orange-400 transition-all"
+                    >
+                      Logout
+                    </button>
+                  ) : (
+                    <div className="flex flex-col gap-2">
                       <Link
-                        key={link.name}
-                        href={link.href}
-                        className={`text-sm font-medium transition-all duration-200 ${
-                          pathname === link.href
-                            ? "text-orange-400"
-                            : "text-white"
-                        }`}
+                        href="/auth/sign-in"
+                        className="text-sm font-medium text-orange-400 hover:underline transition-all"
                         onClick={() => setIsOpen(false)}
                       >
-                        {link.name}
+                        Sign In
                       </Link>
-                    ))
-                  : null}
-                {isLoggedIn ? (
-                  <button
-                    onClick={handleLogout}
-                    className="text-sm font-medium text-white hover:text-orange-400 transition-all"
-                  >
-                    Logout
-                  </button>
-                ) : (
-                  <>
-                    <Link
-                      href="/auth/sign-in"
-                      className="text-sm font-medium text-white hover:text-orange-400 transition-all"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Sign In
-                    </Link>
-                    <Link
-                      href="/auth/sign-up"
-                      className="text-sm font-medium text-white hover:text-orange-400 transition-all"
-                      onClick={() => setIsOpen(false)}
-                    >
-                      Sign Up
-                    </Link>
-                  </>
-                )}
+                      <Link
+                        href="/auth/sign-up"
+                        className="text-sm font-medium text-orange-400 hover:underline transition-all"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        Sign Up
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}

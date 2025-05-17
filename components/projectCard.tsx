@@ -4,7 +4,7 @@ import React from "react";
 
 interface ProjectCardProps {
   project: {
-    id: number;
+    _id: any;
     title: string;
     image: string;
     skills: string[];
@@ -20,7 +20,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     <div className="bg-black rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
       {/* Project Image */}
       <img
-        src={project.image}
+        src={`${process.env.NEXT_PUBLIC_API_URL}${project.image}`}
         alt={project.title}
         className="w-full h-48 object-cover"
       />
@@ -33,7 +33,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           <strong>Skills:</strong> {project.skills.join(", ")}
         </p>
         <p className="text-sm text-gray-400 mb-2">
-          <strong>Deadline:</strong> {project.deadline}
+          <strong>Deadline:</strong>{" "}
+          {new Date(project.deadline).toLocaleDateString()}
         </p>
         <p className="text-sm text-gray-400 mb-2">
           <strong>Difficulty:</strong> {project.difficulty}
@@ -42,7 +43,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           <strong>Team Size:</strong> {project.teamSize}
         </p>
         <a
-          href={`/projects/${project.id}`}
+          href={`/projects/${project._id}`}
           className="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg inline-block mt-4"
         >
           View Details

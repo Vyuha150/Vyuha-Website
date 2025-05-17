@@ -20,7 +20,7 @@ export default function MentorFilters({ onFilterChange }: MentorFiltersProps) {
   };
 
   return (
-    <div className="bg-black border border-gray-700 rounded-lg shadow-lg p-6 flex flex-col md:flex-row md:items-center md:justify-between space-y-6 md:space-y-0 md:space-x-6 w-full">
+    <div className="bg-black/50 border border-gray-700 rounded-lg shadow-lg p-6 flex flex-col md:flex-row md:items-center md:justify-between space-y-6 md:space-y-0 md:space-x-6 w-full">
       {/* Skills Filter */}
       <select
         onChange={(e) => handleFilterChange("skills", e.target.value)}

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { courses } from "@/data/coursesData"; // Import the course data
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import CourseCard from "@/components/CourseCard";
 import Filters from "@/components/CourseFilters";
 
@@ -15,7 +15,27 @@ interface Filters {
 }
 
 export default function CourseCatalogPage() {
-  const [filteredCourses, setFilteredCourses] = useState(courses);
+  const [courses, setCourses] = useState<any[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch courses from API on mount
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+        const res = await axios.get(`${apiUrl}/api/courses`);
+        setCourses(res.data);
+        setFilteredCourses(res.data);
+      } catch (err) {
+        setCourses([]);
+        setFilteredCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCourses();
+  }, []);
 
   const handleFilterChange = (filters: Filters) => {
     const filtered = courses.filter((course) => {
@@ -57,9 +77,17 @@ export default function CourseCatalogPage() {
 
       {/* Course Listings */}
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredCourses.map((course) => (
-          <CourseCard key={course.id} course={course} />
-        ))}
+        {loading ? (
+          <div className="col-span-3 text-center text-gray-400">Loading...</div>
+        ) : filteredCourses.length === 0 ? (
+          <div className="col-span-3 text-center text-gray-400">
+            No courses found.
+          </div>
+        ) : (
+          filteredCourses.map((course) => (
+            <CourseCard key={course._id || course.id} course={course} />
+          ))
+        )}
       </div>
     </main>
   );

@@ -17,7 +17,7 @@ export default function SearchBar({ placeholder, onSearch }: SearchBarProps) {
   };
 
   return (
-    <div className="flex items-center bg-black border border-gray-700 rounded-lg overflow-hidden">
+    <div className="flex items-center bg-black border border-gray-700 rounded-lg overflow-hidden mb-4">
       <input
         type="text"
         value={query}

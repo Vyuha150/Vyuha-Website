@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,6 +19,9 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { Badge, Star, Users, Building2, GraduationCap } from "lucide-react";
+import axios from "axios";
+
+declare const Razorpay: any;
 
 const formSchema = z.object({
   fullName: z.string().min(2, "Name must be at least 2 characters"),
@@ -51,25 +54,80 @@ export default function MembershipPage() {
       phone: "",
       address: "",
       organization: "",
-      membershipType: "collaborator", // still valid!
+      membershipType: "collaborator",
       occupation: "",
-      linkedinProfile: "", // even if optional, default it to empty
+      linkedinProfile: "",
       interests: "",
     },
     mode: "onSubmit",
   });
 
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      document.body.removeChild(script);
+    };
+  }, []);
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      // Here we'll add the API call to process the membership
-      console.log(values);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      alert("Membership form submitted successfully!");
-    } catch (error) {
-      console.error(error);
-      alert("Error submitting form. Please try again.");
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/membership/apply`,
+        values
+      );
+
+      if (response.data.orderId) {
+        // If payment is required, initiate payment
+        const { orderId, amount, currency } = response.data;
+
+        const options = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Razorpay key
+          amount,
+          currency,
+          name: "Vyuha Membership",
+          description: "Membership Payment",
+          order_id: orderId,
+          handler: async function (paymentResponse: {
+            razorpay_payment_id: string;
+            razorpay_order_id: string;
+            razorpay_signature: string;
+          }) {
+            // Verify payment
+            const verifyResponse = await axios.post(
+              `${process.env.NEXT_PUBLIC_API_URL}/api/membership/verify-payment`,
+              {
+                orderId,
+                paymentId: paymentResponse.razorpay_payment_id,
+                signature: paymentResponse.razorpay_signature,
+              }
+            );
+
+            alert(verifyResponse.data.message);
+          },
+          prefill: {
+            name: values.fullName,
+            email: values.email,
+            contact: values.phone,
+          },
+        };
+
+        const razorpay = new Razorpay(options);
+        razorpay.open();
+      } else {
+        // If no payment is required
+        alert(response.data.message);
+      }
+    } catch (error: any) {
+      console.error("Error submitting form:", error);
+      alert(
+        error.response?.data?.message ||
+          "Error submitting form. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +149,7 @@ export default function MembershipPage() {
     {
       id: "business",
       title: "Vyuha Business",
-      price: "Contact Us",
+      price: "₹3000",
       icon: <Building2 className="w-6 h-6" />,
       benefits: [
         "Business Network Access",
@@ -112,6 +170,30 @@ export default function MembershipPage() {
         "Student Resources",
       ],
     },
+    {
+      id: "women-empowerment",
+      title: "Vyuha Women Empowerment",
+      price: "Free",
+      icon: <Badge className="w-6 h-6" />,
+      benefits: [
+        "Empowerment Programs",
+        "Skill Development Workshops",
+        "Networking Opportunities",
+        "Community Support",
+      ],
+    },
+    {
+      id: "political-action",
+      title: "Vyuha Political Action Committee",
+      price: "₹5000",
+      icon: <Star className="w-6 h-6" />,
+      benefits: [
+        "Political Awareness Programs",
+        "Leadership Training",
+        "Policy Discussions",
+        "Exclusive Events",
+      ],
+    },
   ];
 
   return (
@@ -127,6 +209,14 @@ export default function MembershipPage() {
           <p className="text-gray-400 max-w-2xl mx-auto">
             Choose the membership that best fits your needs and join our
             community of innovators, entrepreneurs, and change-makers.
+          </p>
+          <p className="mt-4 text-lg text-orange-400 font-semibold">
+            <span className="inline-block align-middle mr-2">🎫</span>
+            <span>
+              All registered members will receive an{" "}
+              <b>instant digital ID card</b> and <b>certificate</b> upon
+              successful registration.
+            </span>
           </p>
         </motion.div>
 

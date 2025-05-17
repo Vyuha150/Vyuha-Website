@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import axios from "axios";
 import {
   Select,
   SelectContent,
@@ -27,12 +29,34 @@ import {
   Upload,
   Search,
   Filter,
-  UsersIcon,
-  BriefcaseIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { events as hardcodedEvents, Event } from "@/data/eventData"; // Import events from eventData.ts
 import React from "react";
+import type { LucideIcon } from "lucide-react"; // Import the icon type separately
+import { id } from "date-fns/locale";
+import Cookies from "js-cookie";
+
+export type Event = {
+  id: number;
+  name: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  organizer: string;
+  organizerBio: string;
+  organizerPhoto: string;
+  platformLink?: string; // For online events
+  fees?: string;
+  materials?: string;
+  isRecorded?: boolean;
+  image: string; // Event image
+  category: string; // Event category
+  mode?: string; // Add mode property (e.g., "online" or "offline")
+  targetAudience?: string; // Add targetAudience property (e.g., "Students", "Professionals")
+  logo?: string; // Add logo property (if different from image)
+  icon?: LucideIcon; // Add icon property for event type icons
+};
 
 export default function EventsPage() {
   const [date, setDate] = useState<Date>();
@@ -41,12 +65,15 @@ export default function EventsPage() {
   const [modeFilter, setModeFilter] = useState("");
   const [targetAudienceFilter, setTargetAudienceFilter] = useState("");
   const [events, setEvents] = useState<Event[]>([]);
-
-  // Fetch events from localStorage and merge with hardcoded events
-  useEffect(() => {
-    const storedEvents = JSON.parse(localStorage.getItem("events") || "[]");
-    setEvents([...storedEvents, ...hardcodedEvents]);
-  }, []);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    message: "",
+  });
+  const [timers, setTimers] = useState<{ [key: number]: string }>({});
 
   const pastEvents = [
     {
@@ -79,6 +106,87 @@ export default function EventsPage() {
     },
   ];
 
+  // Fetch events from the backend
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/events`
+        );
+        console.log("Fetched events:", response.data);
+        if (response.status === 200) {
+          const formattedEvents = response.data.map((event: any) => ({
+            ...event,
+            id: event._id,
+          }));
+          setEvents(formattedEvents);
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  // Calculate timers for events
+  useEffect(() => {
+    const calculateTimers = () => {
+      const newTimers: { [key: number]: string } = {};
+      events.forEach((event) => {
+        const eventDate = new Date(`${event.date} ${event.time}`);
+        const now = new Date();
+        const difference = eventDate.getTime() - now.getTime();
+
+        if (difference > 0) {
+          const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+          const minutes = Math.floor((difference / (1000 * 60)) % 60);
+          newTimers[event.id] = `${days}d ${hours}h ${minutes}m`;
+        } else {
+          newTimers[event.id] = "Event has started or ended.";
+        }
+      });
+      setTimers(newTimers);
+    };
+
+    calculateTimers();
+    const timerInterval = setInterval(calculateTimers, 60000); // Update every minute
+    return () => clearInterval(timerInterval);
+  }, [events]);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/events/register`,
+        {
+          eventId: selectedEvent?.id,
+          ...formData,
+        }
+      );
+      if (response.status === 200) {
+        alert("Registration successful!");
+        setIsModalOpen(false);
+        setFormData({ name: "", email: "", phone: "", message: "" });
+      }
+    } catch (error: any) {
+      if (error.response && error.response.status === 400) {
+        alert(error.response.data.message);
+      } else {
+        console.error("Error registering for event:", error);
+        alert("An error occurred. Please try again.");
+      }
+    }
+  };
+
   const filteredEvents = events.filter((event) => {
     const matchesSearch = event.name
       .toLowerCase()
@@ -86,7 +194,6 @@ export default function EventsPage() {
     const matchesCategory = categoryFilter
       ? event.category === categoryFilter
       : true;
-    // assuming you have a "mode" property (you'd need to add this to events)
     const matchesMode = modeFilter ? event.mode === modeFilter : true;
     const matchesDate = date
       ? format(new Date(event.date), "yyyy-MM-dd") ===
@@ -165,7 +272,7 @@ export default function EventsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Students">Students</SelectItem>
-                <SelectItem value="EveryOne">EveryOne</SelectItem>
+                <SelectItem value="Everyone">Everyone</SelectItem>
                 <SelectItem value="Professionals">Professionals</SelectItem>
               </SelectContent>
             </Select>
@@ -174,21 +281,17 @@ export default function EventsPage() {
               <SelectTrigger>
                 <SelectValue placeholder="Mode" />
               </SelectTrigger>
-              <SelectContent className="bg-transparent text-white">
-                <SelectItem value="online" className="bg-black text-white">
-                  Online
-                </SelectItem>
-                <SelectItem value="offline" className="bg-black text-white">
-                  Offline
-                </SelectItem>
+              <SelectContent>
+                <SelectItem value="online">Online</SelectItem>
+                <SelectItem value="offline">Offline</SelectItem>
               </SelectContent>
             </Select>
 
             <Popover>
-              <PopoverTrigger asChild className="bg-transparent">
+              <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-left font-normal"
+                  className="w-full justify-start text-left font-normal bg-transparent"
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, "PPP") : <span>Pick a date</span>}
@@ -228,11 +331,14 @@ export default function EventsPage() {
                   <Card className="overflow-hidden bg-black text-white hover:shadow-orange-500/50 transition-all duration-300 h-auto">
                     <div className="aspect-video relative">
                       <img
-                        src={event.logo}
+                        src={`${process.env.NEXT_PUBLIC_API_URL}${event.logo}`}
                         alt={event.name}
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                       />
-                      <div className="absolute top-4 right-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm">
+                      <div className="absolute top-4 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm">
+                        {timers[event.id]}
+                      </div>
+                      <div className="absolute top-4 right-4 bg-black text-white px-3 py-1 rounded-full text-sm">
                         {event.category}
                       </div>
                     </div>
@@ -266,7 +372,13 @@ export default function EventsPage() {
                     <CardContent>
                       <p className="text-gray-400 mb-4">{event.description}</p>
                       <div className="flex gap-4">
-                        <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white transition-transform duration-300 hover:scale-105">
+                        <Button
+                          className="w-full bg-orange-500 hover:bg-orange-600 text-white transition-transform duration-300 hover:scale-105"
+                          onClick={() => {
+                            setSelectedEvent(event);
+                            setIsModalOpen(true);
+                          }}
+                        >
                           Join Event
                         </Button>
                         <Button
@@ -368,6 +480,95 @@ export default function EventsPage() {
           </div>
         </div>
       </section>
+      {isModalOpen && selectedEvent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
+          <div className="bg-black text-white border border-orange-500 p-6 rounded-lg shadow-lg w-full max-w-md">
+            <h2 className="text-2xl font-bold mb-4 text-white">
+              Register for {selectedEvent.name}
+            </h2>
+            <form onSubmit={handleRegister} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Name
+                </label>
+                <Input
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Your name"
+                  className="rounded-lg"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Your email"
+                  className="rounded-lg"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Phone
+                </label>
+                <Input
+                  id="phone"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleInputChange}
+                  placeholder="Your phone number"
+                  className="rounded-lg"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="message"
+                  className="block text-sm font-medium text-gray-300 mb-2"
+                >
+                  Message (Optional)
+                </label>
+                <Textarea
+                  id="message"
+                  name="message"
+                  value={formData.message}
+                  onChange={handleInputChange}
+                  placeholder="Any additional message"
+                  rows={3}
+                  className="rounded-lg"
+                />
+              </div>
+              <div className="flex justify-end gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-300 border-gray-300"
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" className="bg-orange-500 text-white">
+                  Register
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -68,50 +68,44 @@ export default function SignUpPage() {
     },
   });
 
-  // const onSubmit = async (values: z.infer<typeof formSchema>) => {
-  //   setIsSubmitting(true);
-  //   try {
-  //     // Use the API URL from the environment variable
-  //     const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  //     // Make API call to the signup endpoint
-  //     const response = await axios.post(`${apiUrl}/api/auth/signup`, {
-  //       username: values.fullName,
-  //       email: values.email,
-  //       password: values.password,
-  //     });
-
-  //     if (response.status === 201) {
-  //       const { token, user } = response.data;
-
-  //       // Store the token in sessionStorage or localStorage
-  //       sessionStorage.setItem("authToken", token);
-
-  //       alert(
-  //         "Account created successfully! Redirecting to the sign-in page..."
-  //       );
-  //       router.push("/auth/sign-in"); // Navigate to the sign-in page
-  //     }
-  //   } catch (error) {
-  //     console.error("Error during sign-up:", error);
-
-  //     // Handle specific error messages from the API
-  //     if (axios.isAxiosError(error) && error.response) {
-  //       alert(
-  //         error.response.data.message || "An error occurred. Please try again."
-  //       );
-  //     } else {
-  //       alert("An error occurred. Please try again later.");
-  //     }
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
-    console.log("Form submitted:", values); // Log the form values
-    router.push("/auth/sign-in"); // Navigate to the sign-in page
+    try {
+      // Use the API URL from the environment variable
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+      // Make API call to the signup endpoint
+      const response = await axios.post(`${apiUrl}/api/auth/signup`, {
+        username: values.fullName,
+        email: values.email,
+        password: values.password,
+      });
+
+      if (response.status === 201) {
+        const { token, user } = response.data;
+
+        // Store the token in sessionStorage or localStorage
+        sessionStorage.setItem("authToken", token);
+
+        alert(
+          "Account created successfully! Redirecting to the sign-in page..."
+        );
+        router.push("/auth/sign-in"); // Navigate to the sign-in page
+      }
+    } catch (error) {
+      console.error("Error during sign-up:", error);
+
+      // Handle specific error messages from the API
+      if (axios.isAxiosError(error) && error.response) {
+        alert(
+          error.response.data.message || "An error occurred. Please try again."
+        );
+      } else {
+        alert("An error occurred. Please try again later.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
