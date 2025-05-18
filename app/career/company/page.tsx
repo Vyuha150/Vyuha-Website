@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import Cookies from "js-cookie";
 
 export default function AddCompanyPage() {
   const router = useRouter();
@@ -77,9 +78,12 @@ export default function AddCompanyPage() {
         data.append("logo", formData.logo);
       }
 
+      const token = Cookies.get("authToken");
+
       // Send POST request to the backend
       const response = await axios.post(`${apiUrl}/api/companies`, data, {
         headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
           "Content-Type": "multipart/form-data",
         },
       });

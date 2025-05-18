@@ -50,14 +50,15 @@ export default function SignInPage() {
       const response = await axios.post(apiUrl, values);
 
       if (response.status === 200) {
-        const { token, userId } = response.data;
+        const { token, userId, role } = response.data;
 
         // Store the token and userId in sessionStorage
-        Cookies.set("authToken", token, { path: "/", expires: 1 / 24 }); // Expires in 1 hour
-        Cookies.set("userId", userId, { path: "/", expires: 1 / 24 });
+        Cookies.set("authToken", token, { path: "/", expires: 1 });
+        Cookies.set("userId", userId, { path: "/", expires: 1 });
+        Cookies.set("role", role, { path: "/", expires: 1 });
 
         alert("Sign-in successful! Redirecting to the home page...");
-        router.push("/"); // Navigate to the home page
+        router.push("/");
       } else {
         alert("Invalid email or password. Please try again.");
       }

@@ -80,6 +80,7 @@ export default function Navbar() {
   const handleLogout = () => {
     Cookies.remove("authToken");
     Cookies.remove("userId");
+    Cookies.remove("role");
     setIsLoggedIn(false);
     router.push("/auth/sign-in");
   };
