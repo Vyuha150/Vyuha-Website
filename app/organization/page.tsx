@@ -73,80 +73,79 @@ function isProject(item: ResourceItem): item is Project {
 
 export default function OrganizationPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<
+    "students" | "halls" | "events" | "projects"
+  >("students");
+  const [showModal, setShowModal] = useState(false);
 
-  const resources: ResourceCategory[] = [
-    {
-      type: "students",
-      items: [
-        {
-          name: "John Doe",
-          skills: ["Web Development", "UI/UX Design"],
-          availability: "Part-time",
-          location: "Vijayawada",
-        },
-        {
-          name: "Sarah Chen",
-          skills: ["Data Science", "Machine Learning"],
-          availability: "Full-time",
-          location: "Hyderabad",
-        },
-      ],
-    },
-    {
-      type: "halls",
-      items: [
-        {
-          name: "Innovation Hub",
-          capacity: "200 people",
-          facilities: ["Projector", "Sound System", "Wi-Fi"],
-          location: "Main Campus",
-        },
-        {
-          name: "Conference Center",
-          capacity: "150 people",
-          facilities: ["Video Conferencing", "Catering"],
-          location: "Tech Park",
-        },
-      ],
-    },
-    {
-      type: "events",
-      items: [
-        {
-          title: "Tech Innovation Summit",
-          date: "2024-03-15",
-          type: "Conference",
-          attendees: "300+",
-        },
-        {
-          title: "AI Workshop Series",
-          date: "2024-03-20",
-          type: "Workshop",
-          attendees: "50",
-        },
-      ],
-    },
-    {
-      type: "projects",
-      items: [
-        {
-          title: "Smart City Initiative",
-          status: "In Progress",
-          team: "5 members",
-          domain: "IoT",
-        },
-        {
-          title: "Healthcare Analytics",
-          status: "Seeking Collaborators",
-          team: "3 members",
-          domain: "Data Science",
-        },
-      ],
-    },
-  ];
+  // State for each resource type
+  const [students, setStudents] = useState<Student[]>([]);
+  const [halls, setHalls] = useState<Hall[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  // Form state
+  const [formData, setFormData] = useState<any>({});
 
   const handleSearchQueryChange = (e: ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+  };
+
+  // Filtered resources based on search
+  const filteredStudents = students.filter((s) =>
+    s.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filteredHalls = halls.filter((h) =>
+    h.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filteredEvents = events.filter((e) =>
+    e.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filteredProjects = projects.filter((p) =>
+    p.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Handle Add Resource button
+  const handleAddResource = () => {
+    setFormData({});
+    setShowModal(true);
+  };
+
+  // Handle form input change
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  // Handle form submit
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (activeTab === "students") {
+      setStudents([
+        ...students,
+        {
+          ...formData,
+          skills: (formData.skills || "")
+            .split(",")
+            .map((s: string) => s.trim()),
+        },
+      ]);
+    } else if (activeTab === "halls") {
+      setHalls([
+        ...halls,
+        {
+          ...formData,
+          facilities: (formData.facilities || "")
+            .split(",")
+            .map((f: string) => f.trim()),
+        },
+      ]);
+    } else if (activeTab === "events") {
+      setEvents([...events, formData]);
+    } else if (activeTab === "projects") {
+      setProjects([...projects, formData]);
+    }
+    setShowModal(false);
+    setFormData({});
   };
 
   return (
@@ -172,7 +171,7 @@ export default function OrganizationPage() {
               className="pl-10 py-5 blackdrop-blur-sm border-2 bg-black/50 border-white/10 text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 rounded-xl"
               placeholder="Search resources..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchQueryChange}
             />
           </div>
           <div className="flex gap-4">
@@ -180,14 +179,177 @@ export default function OrganizationPage() {
               <Filter className="w-4 h-4" />
               Filters
             </Button>
-            <Button className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-5 rounded-xl font-medium font-outfit transition-all duration-300 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-1 active:translate-y-0">
+            <Button
+              className="gap-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white px-8 py-5 rounded-xl font-medium font-outfit transition-all duration-300 shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-1 active:translate-y-0"
+              onClick={handleAddResource}
+            >
               <Plus className="w-4 h-4" />
               Add Resource
             </Button>
           </div>
         </div>
 
-        <Tabs defaultValue="students" className="space-y-6">
+        {/* Modal for adding resource */}
+        {showModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <div className="bg-black text-white p-8 rounded-lg shadow-lg w-full max-w-md relative">
+              <button
+                className="absolute top-2 right-2 text-gray-500 hover:text-orange-500"
+                onClick={() => setShowModal(false)}
+              >
+                ×
+              </button>
+              <h2 className="text-xl font-bold mb-4 text-white">
+                Add{" "}
+                {activeTab.charAt(0).toUpperCase() +
+                  activeTab.slice(1).replace(/s$/, "")}
+              </h2>
+              <form onSubmit={handleFormSubmit} className="space-y-4">
+                {activeTab === "students" && (
+                  <>
+                    <Input
+                      name="name"
+                      placeholder="Name"
+                      value={formData.name || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="skills"
+                      placeholder="Skills (comma separated)"
+                      value={formData.skills || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="availability"
+                      placeholder="Availability"
+                      value={formData.availability || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="location"
+                      placeholder="Location"
+                      value={formData.location || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </>
+                )}
+                {activeTab === "halls" && (
+                  <>
+                    <Input
+                      name="name"
+                      placeholder="Hall Name"
+                      value={formData.name || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="capacity"
+                      placeholder="Capacity"
+                      value={formData.capacity || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="facilities"
+                      placeholder="Facilities (comma separated)"
+                      value={formData.facilities || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="location"
+                      placeholder="Location"
+                      value={formData.location || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </>
+                )}
+                {activeTab === "events" && (
+                  <>
+                    <Input
+                      name="title"
+                      placeholder="Event Title"
+                      value={formData.title || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="date"
+                      type="date"
+                      placeholder="Date"
+                      value={formData.date || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="type"
+                      placeholder="Type"
+                      value={formData.type || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="attendees"
+                      placeholder="Attendees"
+                      value={formData.attendees || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </>
+                )}
+                {activeTab === "projects" && (
+                  <>
+                    <Input
+                      name="title"
+                      placeholder="Project Title"
+                      value={formData.title || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="status"
+                      placeholder="Status"
+                      value={formData.status || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="team"
+                      placeholder="Team"
+                      value={formData.team || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                    <Input
+                      name="domain"
+                      placeholder="Domain"
+                      value={formData.domain || ""}
+                      onChange={handleFormChange}
+                      required
+                    />
+                  </>
+                )}
+                <Button
+                  type="submit"
+                  className="w-full bg-orange-500 text-white"
+                >
+                  Add
+                </Button>
+              </form>
+            </div>
+          </div>
+        )}
+
+        <Tabs
+          defaultValue="students"
+          className="space-y-6"
+          onValueChange={(val) => setActiveTab(val as any)}
+        >
           <TabsList className="bg-black/50 border border-white/10 w-full p-6 h-auto">
             <div className="flex flex-col sm:flex-row sm:justify-start gap-4 w-full">
               <TabsTrigger
@@ -221,112 +383,145 @@ export default function OrganizationPage() {
             </div>
           </TabsList>
 
-          {resources.map((resource, idx) => (
-            <TabsContent key={idx} value={resource.type}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {resource.items.map((item, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <Card className="p-6 bg-black/50 backdrop-blur-sm border border-white/10 hover:border-orange-500/50 hover:shadow-[0_0_20px_4px_rgba(255,115,0,0.4)] transition-all duration-300 hover:transform hover:translate-y-[-5px]">
-                      <h3 className="text-xl font-semibold mb-2 text-white">
-                        {"title" in item ? item.title : item.name}
-                      </h3>
-                      {/* Render specific fields based on the resource type */}
-                      {isStudent(item) && (
-                        <>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {item.skills.map((skill, i) => (
-                              <span
-                                key={i}
-                                className="text-xs bg-orange-500/10 text-orange-400 px-2 py-1 rounded-full"
-                              >
-                                {skill}
-                              </span>
-                            ))}
-                          </div>
-                          <p className="text-gray-400 text-sm">
-                            <span className="font-semibold">Availability:</span>{" "}
-                            {item.availability}
-                          </p>
-                          <p className="text-gray-400 text-sm">
-                            <span className="font-semibold">Location:</span>{" "}
-                            {item.location}
-                          </p>
-                        </>
-                      )}
-                      {isHall(item) && (
-                        <>
-                          <p className="text-orange-400 mb-4">
-                            {item.capacity}
-                          </p>
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {item.facilities.map((facility, i) => (
-                              <span
-                                key={i}
-                                className="text-xs bg-orange-500/10 text-orange-400 px-2 py-1 rounded-full"
-                              >
-                                {facility}
-                              </span>
-                            ))}
-                          </div>
-                          <p className="text-gray-400 text-sm">
-                            <span className="font-semibold">Location:</span>{" "}
-                            {item.location}
-                          </p>
-                        </>
-                      )}
-                      {isEvent(item) && (
-                        <>
-                          <div className="flex items-center gap-2 text-orange-400 mb-4">
-                            <CalendarDays className="w-4 h-4" />
-                            {new Date(item.date).toLocaleDateString()}
-                          </div>
-                          <p className="text-gray-400 text-sm mb-2">
-                            <span className="font-semibold">Type:</span>{" "}
-                            {item.type}
-                          </p>
-                          <p className="text-gray-400 text-sm">
-                            <span className="font-semibold">
-                              Expected Attendees:
-                            </span>{" "}
-                            {item.attendees}
-                          </p>
-                        </>
-                      )}
-                      {isProject(item) && (
-                        <>
-                          <span className="inline-block bg-orange-500/10 text-orange-400 px-2 py-1 rounded-full text-sm mb-4">
-                            {item.status}
-                          </span>
-                          <p className="text-gray-400 text-sm mb-2">
-                            <span className="font-semibold">Team Size:</span>{" "}
-                            {item.team}
-                          </p>
-                          <p className="text-gray-400 text-sm">
-                            <span className="font-semibold">Domain:</span>{" "}
-                            {item.domain}
-                          </p>
-                        </>
-                      )}
-                      <Button className="w-full mt-4" variant="outline">
-                        {resource.type === "students"
-                          ? "View Profile"
-                          : resource.type === "halls"
-                          ? "Book Venue"
-                          : resource.type === "events"
-                          ? "View Details"
-                          : "View Project"}
-                      </Button>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-            </TabsContent>
-          ))}
+          <TabsContent value="students">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredStudents.map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Card className="p-6 bg-black/50 backdrop-blur-sm border border-white/10 hover:border-orange-500/50 hover:shadow-[0_0_20px_4px_rgba(255,115,0,0.4)] transition-all duration-300 hover:transform hover:translate-y-[-5px]">
+                    <h3 className="text-xl font-semibold mb-2 text-white">
+                      {item.name}
+                    </h3>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {item.skills.map((skill, i) => (
+                        <span
+                          key={i}
+                          className="text-xs bg-orange-500/10 text-orange-400 px-2 py-1 rounded-full"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-gray-400 text-sm">
+                      <span className="font-semibold">Availability:</span>{" "}
+                      {item.availability}
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      <span className="font-semibold">Location:</span>{" "}
+                      {item.location}
+                    </p>
+                    <Button className="w-full mt-4" variant="outline">
+                      View Profile
+                    </Button>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </TabsContent>
+          <TabsContent value="halls">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredHalls.map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Card className="p-6 bg-black/50 backdrop-blur-sm border border-white/10 hover:border-orange-500/50 hover:shadow-[0_0_20px_4px_rgba(255,115,0,0.4)] transition-all duration-300 hover:transform hover:translate-y-[-5px]">
+                    <h3 className="text-xl font-semibold mb-2 text-white">
+                      {item.name}
+                    </h3>
+                    <p className="text-orange-400 mb-4">{item.capacity}</p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {item.facilities.map((facility, i) => (
+                        <span
+                          key={i}
+                          className="text-xs bg-orange-500/10 text-orange-400 px-2 py-1 rounded-full"
+                        >
+                          {facility}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-gray-400 text-sm">
+                      <span className="font-semibold">Location:</span>{" "}
+                      {item.location}
+                    </p>
+                    <Button className="w-full mt-4" variant="outline">
+                      Book Venue
+                    </Button>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </TabsContent>
+          <TabsContent value="events">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredEvents.map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Card className="p-6 bg-black/50 backdrop-blur-sm border border-white/10 hover:border-orange-500/50 hover:shadow-[0_0_20px_4px_rgba(255,115,0,0.4)] transition-all duration-300 hover:transform hover:translate-y-[-5px]">
+                    <h3 className="text-xl font-semibold mb-2 text-white">
+                      {item.title}
+                    </h3>
+                    <div className="flex items-center gap-2 text-orange-400 mb-4">
+                      <CalendarDays className="w-4 h-4" />
+                      {new Date(item.date).toLocaleDateString()}
+                    </div>
+                    <p className="text-gray-400 text-sm mb-2">
+                      <span className="font-semibold">Type:</span> {item.type}
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      <span className="font-semibold">Expected Attendees:</span>{" "}
+                      {item.attendees}
+                    </p>
+                    <Button className="w-full mt-4" variant="outline">
+                      View Details
+                    </Button>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </TabsContent>
+          <TabsContent value="projects">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProjects.map((item, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Card className="p-6 bg-black/50 backdrop-blur-sm border border-white/10 hover:border-orange-500/50 hover:shadow-[0_0_20px_4px_rgba(255,115,0,0.4)] transition-all duration-300 hover:transform hover:translate-y-[-5px]">
+                    <h3 className="text-xl font-semibold mb-2 text-white">
+                      {item.title}
+                    </h3>
+                    <span className="inline-block bg-orange-500/10 text-orange-400 px-2 py-1 rounded-full text-sm mb-4">
+                      {item.status}
+                    </span>
+                    <p className="text-gray-400 text-sm mb-2">
+                      <span className="font-semibold">Team Size:</span>{" "}
+                      {item.team}
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      <span className="font-semibold">Domain:</span>{" "}
+                      {item.domain}
+                    </p>
+                    <Button className="w-full mt-4" variant="outline">
+                      View Project
+                    </Button>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </TabsContent>
         </Tabs>
       </div>
     </main>
