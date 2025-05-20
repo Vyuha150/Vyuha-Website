@@ -28,7 +28,6 @@ const connectLinks = [
   { name: "Membership", href: "/membership" },
   { name: "Podcast Connect", href: "/podcast-partner" },
   { name: "Career Boost", href: "/path" },
-  { name: "Path Preview", href: "/path-preview" },
   { name: "Organizations", href: "/organizations" },
 ];
 
@@ -419,12 +418,38 @@ export default function Navbar() {
                 {/* Profile Section */}
                 <div className="border-t border-white/10 pt-4">
                   {isLoggedIn ? (
-                    <button
-                      onClick={handleLogout}
-                      className="text-sm font-medium text-white hover:text-orange-400 transition-all"
-                    >
-                      Logout
-                    </button>
+                    <>
+                      <Link
+                        href="/profile"
+                        className="flex items-center space-x-2 text-sm font-medium text-white hover:text-orange-400 transition-all mb-2"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Profile</span>
+                      </Link>
+                      <Link
+                        href="/profile/settings"
+                        className="flex items-center space-x-2 text-sm font-medium text-white hover:text-orange-400 transition-all mb-2"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Settings</span>
+                      </Link>
+                      <Link
+                        href="/profile/notifications"
+                        className="flex items-center space-x-2 text-sm font-medium text-white hover:text-orange-400 transition-all mb-2"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <Bell className="w-4 h-4" />
+                        <span>Notifications</span>
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="text-sm font-medium text-white hover:text-orange-400 transition-all"
+                      >
+                        Logout
+                      </button>
+                    </>
                   ) : (
                     <div className="flex flex-col gap-2">
                       <Link

@@ -1,5 +1,11 @@
 "use client";
-import React, { useCallback, useMemo, useRef, useEffect } from "react";
+import React, {
+  useCallback,
+  useMemo,
+  useRef,
+  useEffect,
+  useState,
+} from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import {
   ArrowRight,
@@ -11,6 +17,17 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Service {
   title: string;
@@ -210,10 +227,14 @@ const Services = () => {
     router.push("/membership");
   }, []);
 
+  const [consultOpen, setConsultOpen] = React.useState(false);
+
   const handleConsultation = useCallback(() => {
-    router.push("/membership");
-    // Consultation logic
+    setConsultOpen(true);
   }, []);
+
+  // State for dialog
+  const [openDialog, setOpenDialog] = useState(false);
 
   return (
     <section ref={sectionRef} className="relative py-24 overflow-hidden">
@@ -283,10 +304,77 @@ const Services = () => {
             text="Schedule a Consultation"
             onClick={handleConsultation}
           />
+          <ConsultationForm open={consultOpen} onOpenChange={setConsultOpen} />
         </div>
       </motion.div>
+
+      {/* Consultation Form Dialog */}
+      <ConsultationForm open={openDialog} onOpenChange={setOpenDialog} />
     </section>
   );
 };
+
+function ConsultationForm({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const { register, handleSubmit, reset, formState } = useForm();
+  const onSubmit = (data: any) => {
+    // TODO: Send data to your API
+    alert("Consultation request submitted!");
+    reset();
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg bg-black/50 text-white rounded-lg shadow-lg">
+        <DialogHeader>
+          <DialogTitle>Schedule a Consultation</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <Input
+            {...register("name", { required: true })}
+            placeholder="Your Name"
+            required
+          />
+          <Input
+            {...register("email", { required: true })}
+            type="email"
+            placeholder="Your Email"
+            required
+          />
+          <Input
+            {...register("phone", { required: true })}
+            placeholder="Phone Number"
+            required
+          />
+          <Input
+            {...register("preferredTime", { required: true })}
+            type="datetime-local"
+            placeholder="Preferred Time Slot"
+            required
+          />
+          <Textarea
+            {...register("message")}
+            placeholder="Describe your requirements (optional)"
+          />
+          <DialogFooter>
+            <Button
+              type="submit"
+              className="w-full bg-orange-500 text-white"
+              disabled={formState.isSubmitting}
+            >
+              {formState.isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default Services;

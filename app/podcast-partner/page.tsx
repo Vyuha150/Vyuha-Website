@@ -119,7 +119,7 @@ export default function PodcastPartnerForm() {
             Watch Our Podcast Episodes
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {videos.map((video) => {
+            {videos.map((video, index) => {
               const thumbnail = getYouTubeThumbnail(video.url);
               return (
                 <motion.div
@@ -137,9 +137,11 @@ export default function PodcastPartnerForm() {
                         className="w-full h-48 object-cover rounded-lg mb-4"
                       />
                     ) : (
-                      <div className="w-full h-48 bg-gray-700 rounded-lg flex items-center justify-center text-gray-400">
-                        No Thumbnail Available
-                      </div>
+                      <img
+                        src={`/insta${index}.jpg`}
+                        alt={`/insta${index}`}
+                        className="w-full h-48 object-cover rounded-lg mb-4"
+                      />
                     )}
                     <h3 className="text-lg font-bold text-orange-500">
                       {video.title}

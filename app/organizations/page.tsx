@@ -25,6 +25,26 @@ import {
   Send,
 } from "lucide-react";
 import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Label } from "@radix-ui/react-label";
+
+// Invite Form Schema
+const inviteSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  phone: z.string().min(10, "Phone number is required"),
+  email: z.string().email("Enter a valid email"),
+  message: z.string().optional(),
+});
+
+// Join Form Schema
+const joinSchema = z.object({
+  name: z.string().min(2, "Name is required"),
+  email: z.string().email("Enter a valid email"),
+  domain: z.string().min(2, "Domain is required"),
+  region: z.string().min(2, "Region is required"),
+});
 
 interface Organization {
   id: number;
@@ -150,6 +170,155 @@ export default function OrganizationsPage() {
       verified: false,
     },
   ];
+
+  const InviteForm = () => {
+    const [success, setSuccess] = useState(false);
+    const form = useForm<z.infer<typeof inviteSchema>>({
+      resolver: zodResolver(inviteSchema),
+      defaultValues: { name: "", phone: "", email: "", message: "" },
+    });
+
+    const onSubmit = async (values: z.infer<typeof inviteSchema>) => {
+      // TODO: Replace with your API call
+      setSuccess(true);
+      form.reset();
+    };
+
+    return (
+      <Card className="mb-8 bg-black/50 text-white">
+        <CardHeader>
+          <CardTitle>Invite an Organization</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col gap-4"
+          >
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-gray-400">Your Name:</Label>
+              <Input
+                placeholder="Your Name"
+                {...form.register("name")}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-gray-400">
+                Your Phone Number:
+              </Label>
+              <Input
+                placeholder="Your Phone Number"
+                {...form.register("phone")}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-gray-400">
+                Organization Email:
+              </Label>
+              <Input
+                placeholder="Organization Email"
+                {...form.register("email")}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-gray-400">
+                Optional message to the organization:
+              </Label>
+              <Input
+                placeholder="Message (optional)"
+                {...form.register("message")}
+              />
+            </div>
+            <Button type="submit" className="bg-orange-500 text-white">
+              Send Invite
+            </Button>
+            {success && (
+              <span className="text-green-500 text-sm mt-2">
+                Invitation sent!
+              </span>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const JoinForm = () => {
+    const [success, setSuccess] = useState(false);
+    const form = useForm<z.infer<typeof joinSchema>>({
+      resolver: zodResolver(joinSchema),
+      defaultValues: { name: "", email: "", domain: "", region: "" },
+    });
+
+    const onSubmit = async (values: z.infer<typeof joinSchema>) => {
+      // TODO: Replace with your API call
+      setSuccess(true);
+      form.reset();
+    };
+
+    return (
+      <Card className="mb-8 bg-black/50 text-white">
+        <CardHeader>
+          <CardTitle>Join as an Organization</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col gap-4"
+          >
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-gray-400">
+                Fill in the details of your organization:
+              </Label>
+              <Input
+                placeholder="Organization Name"
+                {...form.register("name")}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-gray-400">Contact Email:</Label>
+              <Input
+                placeholder="Contact Email"
+                {...form.register("email")}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-gray-400">
+                Domain of Interest:
+              </Label>
+              <Input
+                placeholder="Domain"
+                {...form.register("domain")}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label className="text-sm text-gray-400">
+                Region/State of Operation:
+              </Label>
+              <Input
+                placeholder="Region/State"
+                {...form.register("region")}
+                required
+              />
+            </div>
+            <Button type="submit" className="bg-orange-500 text-white">
+              Join Network
+            </Button>
+            {success && (
+              <span className="text-green-500 text-sm mt-2">
+                Registration submitted!
+              </span>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+    );
+  };
 
   return (
     <main className="min-h-screen">
@@ -377,6 +546,14 @@ export default function OrganizationsPage() {
           >
             <Link href="/join">Register Your Organization</Link>
           </Button>
+        </div>
+      </section>
+
+      {/* Invite & Join Forms */}
+      <section className="py-12 px-4 md:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+          <InviteForm />
+          <JoinForm />
         </div>
       </section>
     </main>

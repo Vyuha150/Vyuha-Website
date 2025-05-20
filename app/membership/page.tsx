@@ -185,7 +185,7 @@ export default function MembershipPage() {
     {
       id: "political-action",
       title: "Vyuha Political Action Committee",
-      price: "₹5000",
+      price: "₹100",
       icon: <Star className="w-6 h-6" />,
       benefits: [
         "Political Awareness Programs",

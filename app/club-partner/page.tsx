@@ -255,9 +255,9 @@ export default function ClubPartnerForms() {
               className="flex justify-center items-center"
             >
               <img
-                src="/anna.png"
+                src="/club-partner/club-partner-3.jpg"
                 alt="Join Vyuha Central Team"
-                className="w-full h-auto rounded-lg shadow-lg"
+                className="w-full h-auto rounded-xl shadow-lg"
               />
             </motion.div>
           </div>
@@ -266,12 +266,12 @@ export default function ClubPartnerForms() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              className="flex justify-center items-center order-last lg:order-first"
+              className="flex justify-center items-center order-last lg:order-first rounded-xl"
             >
               <img
-                src="/anna.png"
+                src="/club-partner/club-partner-1.jpg"
                 alt="Open a New Club"
-                className="w-full h-auto rounded-lg shadow-lg"
+                className="w-full h-auto rounded-xl shadow-lg"
               />
             </motion.div>
             <motion.div
@@ -519,12 +519,12 @@ export default function ClubPartnerForms() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              className="flex justify-center items-center"
+              className="flex justify-center items-center rounded-xl"
             >
               <img
-                src="/anna.png"
+                src="/club-partner/club-partner-2.jpg"
                 alt="Collaborate with an Existing Club"
-                className="w-full h-auto rounded-lg shadow-lg"
+                className="w-full h-auto rounded-xl shadow-lg"
               />
             </motion.div>
           </div>

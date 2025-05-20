@@ -34,6 +34,10 @@ const formSchema = z
   .object({
     fullName: z.string().min(2, "Name must be at least 2 characters"),
     email: z.string().email("Invalid email address"),
+    phone: z
+      .string()
+      .min(10, "Phone number must be at least 10 digits")
+      .max(15, "Phone number is too long"),
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
@@ -60,11 +64,12 @@ export default function SignUpPage() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      fullName: "", // Default value for fullName
-      email: "", // Default value for email
-      password: "", // Default value for password
-      confirmPassword: "", // Default value for confirmPassword
-      terms: false, // Default value for terms
+      fullName: "",
+      email: "",
+      phone: "", // Add this line
+      password: "",
+      confirmPassword: "",
+      terms: false,
     },
   });
 
@@ -78,6 +83,7 @@ export default function SignUpPage() {
       const response = await axios.post(`${apiUrl}/api/auth/signup`, {
         username: values.fullName,
         email: values.email,
+        phone: values.phone, // Add this line
         password: values.password,
       });
 
@@ -219,6 +225,31 @@ export default function SignUpPage() {
                               className="pl-10"
                               placeholder="Enter your email"
                               {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Phone Field */}
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <Input
+                              className="pl-10"
+                              placeholder="Enter your phone number"
+                              {...field}
+                              type="tel"
+                              inputMode="tel"
+                              autoComplete="tel"
                             />
                           </div>
                         </FormControl>

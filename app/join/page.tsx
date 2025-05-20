@@ -27,15 +27,22 @@ import { Card } from "@/components/ui/card";
 import { Award, Users, Megaphone, Rocket, GraduationCap } from "lucide-react";
 import axios from "axios";
 
+const organizationTypes = [
+  { value: "govt", label: "Government Institution" },
+  { value: "private", label: "Private Institution" },
+  { value: "msme", label: "MSME or Local Business" },
+  { value: "large", label: "Large/Medium Scale Company" },
+];
+
 const formSchema = z.object({
-  organizationName: z
-    .string()
-    .min(2, "Organization name must be at least 2 characters"),
-  collegeUniversity: z.string().min(2, "College/University name is required"),
-  organizationType: z.string().min(1, "Please select organization type"),
-  activeMembers: z.string().min(1, "Number of active members is required"),
-  pastEvents: z.string().min(10, "Please provide details about past events"),
-  contactName: z.string().min(2, "Contact person's name is required"),
+  registerAs: z.enum(["individual", "organization"], {
+    required_error: "Please select registration type",
+  }),
+  name: z.string().min(2, "Name is required"),
+  organizationType: z.string().optional(),
+  collegeUniversity: z.string().optional(),
+  activeMembers: z.string().optional(),
+  pastEvents: z.string().optional(),
   contactEmail: z.string().email("Invalid email address"),
   contactPhone: z.string().min(10, "Valid phone number is required"),
   logo: z.any().optional(),
@@ -46,12 +53,12 @@ export default function JoinPage() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     defaultValues: {
-      organizationName: "",
-      collegeUniversity: "",
+      registerAs: "individual",
+      name: "",
       organizationType: "",
+      collegeUniversity: "",
       activeMembers: "",
       pastEvents: "",
-      contactName: "",
       contactEmail: "",
       contactPhone: "",
       logo: [],
@@ -59,25 +66,28 @@ export default function JoinPage() {
     resolver: zodResolver(formSchema),
   });
 
+  const watchRegisterAs = form.watch("registerAs");
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      // Create FormData to handle file uploads
       const formData = new FormData();
-      formData.append("organizationName", values.organizationName);
-      formData.append("collegeUniversity", values.collegeUniversity);
-      formData.append("organizationType", values.organizationType);
-      formData.append("activeMembers", values.activeMembers);
-      formData.append("pastEvents", values.pastEvents);
-      formData.append("contactName", values.contactName);
+      formData.append("registerAs", values.registerAs);
+      formData.append("name", values.name);
+      if (values.registerAs === "organization") {
+        formData.append("organizationType", values.organizationType || "");
+        formData.append("activeMembers", values.activeMembers || "");
+        formData.append("pastEvents", values.pastEvents || "");
+      }
+      if (values.registerAs === "individual") {
+        formData.append("collegeUniversity", values.collegeUniversity || "");
+      }
       formData.append("contactEmail", values.contactEmail);
       formData.append("contactPhone", values.contactPhone);
-
       if (values.logo && values.logo[0]) {
-        formData.append("logo", values.logo[0]); // Append the logo file
+        formData.append("logo", values.logo[0]);
       }
 
-      // Send the form data to the backend
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/organization/register`,
         formData,
@@ -90,10 +100,9 @@ export default function JoinPage() {
 
       if (response.status === 201) {
         alert("Registration submitted successfully!");
-        form.reset(); // Reset the form
+        form.reset();
       }
     } catch (error: any) {
-      console.error("Error submitting form:", error);
       alert(
         error.response?.data?.message ||
           "Error submitting form. Please try again."
@@ -188,7 +197,7 @@ export default function JoinPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Card className="p-6 bg-black text-white hover:shadow-orange-500/50 transition-shadow duration-300 hover:border-none hover:shadow-lg">
+            <Card className="p-6 bg-black text-white border border-orange-500 hover:shadow-orange-500 transition-all duration-300 hover:border-none hover:shadow-lg transform">
               <h2 className="text-2xl font-bold mb-6 text-orange-500">
                 Registration Form
               </h2>
@@ -197,63 +206,28 @@ export default function JoinPage() {
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-6"
                 >
+                  {/* Register As */}
                   <FormField
                     control={form.control}
-                    name="organizationName"
+                    name="registerAs"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Organization Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter organization name"
-                            {...field}
-                            className="bg-black text-white border-gray-700"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="collegeUniversity"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>College/University Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter college/university name"
-                            {...field}
-                            className="bg-black text-white border-gray-700"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  <FormField
-                    control={form.control}
-                    name="organizationType"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Organization Type</FormLabel>
+                        <FormLabel>Register as</FormLabel>
                         <FormControl>
                           <Select
                             onValueChange={field.onChange}
                             defaultValue={field.value}
                           >
                             <SelectTrigger className="bg-black text-white border-gray-700">
-                              <SelectValue placeholder="Select organization type" />
+                              <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                             <SelectContent className="bg-black text-white border-gray-700">
-                              <SelectItem value="studentClub">
-                                Student Club
+                              <SelectItem value="individual">
+                                Individual
                               </SelectItem>
-                              <SelectItem value="ngo">NGO</SelectItem>
-                              <SelectItem value="startup">Startup</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
+                              <SelectItem value="organization">
+                                Organization
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </FormControl>
@@ -262,15 +236,24 @@ export default function JoinPage() {
                     )}
                   />
 
+                  {/* Name */}
                   <FormField
                     control={form.control}
-                    name="activeMembers"
+                    name="name"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Number of Active Members</FormLabel>
+                        <FormLabel>
+                          {watchRegisterAs === "organization"
+                            ? "Organization Name"
+                            : "Full Name"}
+                        </FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Enter number of active members"
+                            placeholder={
+                              watchRegisterAs === "organization"
+                                ? "Enter organization name"
+                                : "Enter your full name"
+                            }
                             {...field}
                             className="bg-black text-white border-gray-700"
                           />
@@ -280,43 +263,108 @@ export default function JoinPage() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="pastEvents"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Past Events</FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Provide details about past events"
-                            rows={4}
-                            {...field}
-                            className="bg-black text-white border-gray-700"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* Organization Type */}
+                  {watchRegisterAs === "organization" && (
+                    <FormField
+                      control={form.control}
+                      name="organizationType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Type of Organization</FormLabel>
+                          <FormControl>
+                            <Select
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                            >
+                              <SelectTrigger className="bg-black text-white border-gray-700">
+                                <SelectValue placeholder="Select organization type" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-black text-white border-gray-700">
+                                {organizationTypes.map((type) => (
+                                  <SelectItem
+                                    key={type.value}
+                                    value={type.value}
+                                  >
+                                    {type.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
-                  <FormField
-                    control={form.control}
-                    name="contactName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Contact Person's Name</FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Enter contact person's name"
-                            {...field}
-                            className="bg-black text-white border-gray-700"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {/* College/University Name (only for individual) */}
+                  {watchRegisterAs === "individual" && (
+                    <FormField
+                      control={form.control}
+                      name="collegeUniversity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>
+                            College/University Name{" "}
+                            <span className="text-xs text-gray-400">
+                              (if applicable)
+                            </span>
+                          </FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter college/university name"
+                              {...field}
+                              className="bg-black text-white border-gray-700"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
 
+                  {/* Organization-specific fields */}
+                  {watchRegisterAs === "organization" && (
+                    <>
+                      <FormField
+                        control={form.control}
+                        name="activeMembers"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Number of Active Members</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Enter number of active members"
+                                {...field}
+                                className="bg-black text-white border-gray-700"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="pastEvents"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Past Events</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Provide details about past events"
+                                rows={4}
+                                {...field}
+                                className="bg-black text-white border-gray-700"
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
+
+                  {/* Common fields */}
                   <FormField
                     control={form.control}
                     name="contactEmail"
@@ -358,7 +406,7 @@ export default function JoinPage() {
                     name="logo"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Organization Logo (Optional)</FormLabel>
+                        <FormLabel>Logo (Optional)</FormLabel>
                         <FormControl className="cursor-pointer">
                           <Input
                             type="file"

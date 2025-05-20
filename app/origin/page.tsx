@@ -105,16 +105,16 @@ export default function InitiativesPage() {
 
           {/* Third Achievement */}
           <Achievement
-            title="Social & Technical Internships"
-            description="Providing Technical and social internships to students enabling them to face different real world problem statements and getting expert guidance from professionals in the process of solving the problems along with certifications. Our previous works includes organizing Social internships at KL University providing various opportunities to 1500 students working in 7 villages, collecting data"
+            title="Aware Andhra Campaign"
+            description="Our Volunteers made a remarkable effort by making 500+ new voter registration across various disciplines. Our contribution was recognised by Election Commission of India and awarded our members as best Campus Ambassador for SVEEP initiative."
             image="/portfolio/achievement3.jpg"
             reverse={false}
           />
 
           {/* Fourth Achievement */}
           <Achievement
-            title="Aware Andhra Campaign"
-            description="Our Volunteers made a remarkable effort by making 500+ new voter registration across various disciplines. Our contribution was recognised by Election Commission of India and awarded our members as best Campus Ambassador for SVEEP initiative."
+            title="Social & Technical Internships"
+            description="Providing Technical and social internships to students enabling them to face different real world problem statements and getting expert guidance from professionals in the process of solving the problems along with certifications. Our previous works includes organizing Social internships at KL University providing various opportunities to 1500 students working in 7 villages, collecting data"
             image="/portfolio/achievement4.jpg"
             reverse={true}
           />
@@ -152,7 +152,11 @@ function Achievement({ title, description, image, reverse }: any) {
       } items-center md:items-start space-y-6 md:space-y-10 mb-10`}
     >
       {/* Content */}
-      <div className={`md:w-1/2 space-y-4 ${reverse ? "md:pl-6" : "md:pr-6"}`}>
+      <div
+        className={`md:w-1/2 space-y-4 flex flex-col justify-center items-center md:items-center ${
+          reverse ? "md:pl-6" : "md:pr-6"
+        }`}
+      >
         <h3 className="text-2xl font-bold text-orange-400 text-center md:text-start">
           {title}
         </h3>
@@ -173,8 +177,8 @@ function Achievement({ title, description, image, reverse }: any) {
         <img
           src={image}
           alt={title}
-          className={`w-full h-72 rounded-lg shadow-lg ${
-            !reverse ? "ml-6" : "mr-6"
+          className={`w-[350px] md:w-full h-[200px] md:h-72 rounded-lg shadow-lg ml-4 ${
+            !reverse ? "md:ml-6" : "md:mr-6"
           } hover:scale-105 transition-transform duration-300  border border-orange-400 rounded-lg overflow-hidden`}
         />
       </div>
