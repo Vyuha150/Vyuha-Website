@@ -29,7 +29,13 @@ const formSchema = z.object({
   phone: z.string().min(10, "Phone number must be at least 10 digits"),
   address: z.string().min(10, "Address must be at least 10 characters"),
   organization: z.string().min(2, "Organization name is required"),
-  membershipType: z.enum(["collaborator", "business", "college"]),
+  membershipType: z.enum([
+    "collaborator",
+    "business",
+    "college",
+    "political-action",
+    "women-empowerment",
+  ]),
   occupation: z.string().min(2, "Occupation is required"),
   linkedinProfile: z
     .string()
@@ -76,9 +82,18 @@ export default function MembershipPage() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
+      // Convert interests to array by splitting on commas
+      const payload = {
+        ...values,
+        interests: values.interests
+          .split(",")
+          .map((i) => i.trim())
+          .filter(Boolean),
+      };
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/membership/apply`,
-        values
+        payload
       );
 
       if (response.data.orderId) {
@@ -450,11 +465,14 @@ export default function MembershipPage() {
                         <FormLabel>Areas of Interest</FormLabel>
                         <FormControl>
                           <Input
-                            placeholder="Describe your interests and what you hope to achieve"
+                            placeholder="e.g. web development, AI, marketing"
                             {...field}
                             className="border-orange-400"
                           />
                         </FormControl>
+                        <div className="text-xs text-gray-400 mt-1">
+                          Separate multiple interests with commas.
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}

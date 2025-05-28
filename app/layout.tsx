@@ -16,6 +16,9 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/logo.png" />
+      </head>
       <body className="min-h-screen bg-[#0c0c0c] text-white font-outfit relative overflow-x-hidden">
         {/* 🔥 Orange Accent Gradient Blobs - Shared Site-Wide */}
         <div className="absolute inset-0 -z-10 overflow-hidden">

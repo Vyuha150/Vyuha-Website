@@ -67,7 +67,7 @@ export default function PodcastPartnerForm() {
         },
       });
 
-      if (response.status === 200) {
+      if (response.status === 201) {
         alert("Thank you for your submission!");
         form.reset();
       } else {

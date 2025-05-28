@@ -287,6 +287,11 @@ export default function SignUpPage() {
                             </button>
                           </div>
                         </FormControl>
+                        <div className="text-xs text-gray-400 mt-1">
+                          Please include at least 8 characters, 1 uppercase
+                          character, and 1 non-alphabetic symbol
+                          (., &, !, ?, etc).
+                        </div>
                         <FormMessage />
                       </FormItem>
                     )}

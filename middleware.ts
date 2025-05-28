@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { jwtDecode } from "jwt-decode"; // Fix import for jwtDecode
+import { jwtDecode } from "jwt-decode";
 
 export function middleware(req: Request) {
   // Define routes that do not require authentication
