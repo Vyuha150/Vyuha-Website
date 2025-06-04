@@ -35,6 +35,7 @@ const formSchema = z.object({
     "college",
     "political-action",
     "women-empowerment",
+    "corporate-coolies",
   ]),
   occupation: z.string().min(2, "Occupation is required"),
   linkedinProfile: z
@@ -112,17 +113,22 @@ export default function MembershipPage() {
             razorpay_order_id: string;
             razorpay_signature: string;
           }) {
-            // Verify payment
-            const verifyResponse = await axios.post(
-              `${process.env.NEXT_PUBLIC_API_URL}/api/membership/verify-payment`,
-              {
-                orderId,
-                paymentId: paymentResponse.razorpay_payment_id,
-                signature: paymentResponse.razorpay_signature,
-              }
-            );
-
-            alert(verifyResponse.data.message);
+            try {
+              // Verify payment
+              const verifyResponse = await axios.post(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/membership/verify-payment`,
+                {
+                  orderId,
+                  paymentId: paymentResponse.razorpay_payment_id,
+                  signature: paymentResponse.razorpay_signature,
+                }
+              );
+              alert(verifyResponse.data.message);
+              form.reset(); // <-- Reset form on success
+            } catch (err) {
+              alert("Payment verification failed. Please try again.");
+              form.reset(); // <-- Reset form on failure
+            }
           },
           prefill: {
             name: values.fullName,
@@ -209,6 +215,18 @@ export default function MembershipPage() {
         "Exclusive Events",
       ],
     },
+    {
+      id: "corporate-coolies",
+      title: "Vyuha Corporate Coolies",
+      price: "₹777",
+      icon: <Star className="w-6 h-6" />,
+      benefits: [
+        "Corporate Networking",
+        "Exclusive Workshops",
+        "Premium Resources",
+        "Special Recognition",
+      ],
+    },
   ];
 
   return (
@@ -243,7 +261,7 @@ export default function MembershipPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              <Card className="p-6 bg-black/50 backdrop-blur-sm border border-white/10 hover:border-orange-500/50 hover:shadow-[0_0_20px_4px_rgba(255,115,0,0.4)] transition-all duration-300 hover:transform hover:translate-y-[-5px]">
+              <Card className="p-6 bg-black/50 backdrop-blur-sm border border-white/10 hover:border-orange-500/50 hover:shadow-[0_0_20px_4px_rgba(255,115,0,0.4)] transition-all duration-300 hover:transform hover:translate-y-[-5px] min-h-[275px] flex flex-col justify-between">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-orange-500/10 text-orange-400">
                     {type.icon}

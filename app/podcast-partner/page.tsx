@@ -140,7 +140,7 @@ export default function PodcastPartnerForm() {
                       <img
                         src={`/insta${index}.jpg`}
                         alt={`/insta${index}`}
-                        className="w-full h-48 object-cover rounded-lg mb-4"
+                        className="w-full h-48 object-fit rounded-lg mb-4"
                       />
                     )}
                     <h3 className="text-lg font-bold text-orange-500">

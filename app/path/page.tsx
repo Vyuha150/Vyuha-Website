@@ -19,6 +19,7 @@ import {
   Target,
   Zap,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const paths = [
   {
@@ -154,6 +155,7 @@ const buttonVariants = {
 
 export default function SkillMasteryPaths() {
   const [selectedPath, setSelectedPath] = useState(paths[0].id);
+  const router = useRouter();
 
   return (
     <main className="min-h-screen text-white">
@@ -267,8 +269,9 @@ export default function SkillMasteryPaths() {
                           custom={index}
                           whileHover="hover"
                           whileTap="tap"
+                          className="h-full w-full"
                         >
-                          <Card className="p-4 md:p-5 rounded-xl bg-black/10 text-white border border-gray-600 hover:border-orange-400 transition-colors duration-300 shadow-sm hover:shadow-lg hover:shadow-orange-500 h-auto w-auto">
+                          <Card className="p-4 md:p-5 rounded-xl bg-black/10 text-white border border-gray-600 hover:border-orange-400 transition-colors duration-300 shadow-sm hover:shadow-lg hover:shadow-orange-500 h-[180px] w-full flex flex-col justify-between">
                             <div className="flex items-start gap-3 md:gap-4">
                               <div className="p-2 md:p-3 rounded-md bg-orange-500/10 text-orange-400">
                                 {topic.icon}
@@ -319,8 +322,9 @@ export default function SkillMasteryPaths() {
                 size="lg"
                 variant="secondary"
                 className="w-full md:w-auto bg-white text-orange-600 hover:bg-gray-100 shadow-md"
+                onClick={() => router.push("/auth/sign-up")}
               >
-                Begin Your Transformation{" "}
+                Begin Your Transformation
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
             </motion.div>
