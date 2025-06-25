@@ -132,6 +132,20 @@ export default function ClubPartnerForms() {
           reverse={true}
         />
 
+        <Achievement
+          title="Spirituality Club"
+          description="The Spirituality Club is dedicated to promoting spiritual growth and well-being through various activities and discussions. It aims to create a supportive environment for students to explore their spiritual beliefs, deepen their understanding of different religions, and engage in meaningful discussions about life's purpose and values."
+          image="/clubs/club5.jpg"
+          reverse={false}
+        />
+
+        <Achievement
+          title="Yoga Club"
+          description="The Yoga Club is dedicated to promoting physical and mental well-being through yoga practices. It aims to create a supportive environment for students to learn and practice yoga, improve their physical health, and develop a sense of inner peace and balance."
+          image="/clubs/club6.jpg"
+          reverse={true}
+        />
+
         <div className="max-w-7xl mx-auto space-y-16">
           {/* Form 1: Join Vyuha Central Team */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">

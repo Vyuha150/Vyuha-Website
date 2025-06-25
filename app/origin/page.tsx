@@ -149,7 +149,7 @@ function Achievement({ title, description, image, reverse }: any) {
       transition={{ duration: 1 }}
       className={`relative flex flex-col md:flex-row ${
         reverse ? "md:flex-row-reverse" : ""
-      } items-center md:items-start space-y-6 md:space-y-10 mb-10`}
+      } items-center md:items-center space-y-6 md:space-y-10 mb-10`}
     >
       {/* Content */}
       <div

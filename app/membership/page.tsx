@@ -36,6 +36,7 @@ const formSchema = z.object({
     "political-action",
     "women-empowerment",
     "corporate-coolies",
+    "influencer",
   ]),
   occupation: z.string().min(2, "Occupation is required"),
   linkedinProfile: z
@@ -225,6 +226,18 @@ export default function MembershipPage() {
         "Exclusive Workshops",
         "Premium Resources",
         "Special Recognition",
+      ],
+    },
+    {
+      id: "influencer",
+      title: "Vyuha Influencer",
+      price: "₹250",
+      icon: <Star className="w-6 h-6" />,
+      benefits: [
+        "Influencer Network Access",
+        "Event Sponsorship",
+        "Mentorship Opportunities",
+        "Premium Support",
       ],
     },
   ];

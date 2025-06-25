@@ -12,6 +12,7 @@ import {
 import Image from "next/image";
 import router, { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 
 // Properly type the feature and article interfaces
 interface Feature {
@@ -23,6 +24,7 @@ interface Feature {
 interface Article {
   image: string;
   title: string;
+  description: string;
 }
 
 // Animation variants - simplified for better performance
@@ -66,43 +68,70 @@ FeatureCard.displayName = "FeatureCard";
 
 // Optimized NewsCard component
 const NewsCard = React.memo(
-  ({ article, index }: { article: Article; index: number }) => (
-    <motion.div
-      className="group relative overflow-hidden rounded-xl cursor-pointer border border-white/10 hover:border-orange-500/30 transition-colors duration-300"
-      variants={scaleInVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.4, delay: index * 0.1 }}
-    >
-      <div className="relative h-64 overflow-hidden">
-        <Image
-          src={article.image}
-          alt={article.title}
-          fill
-          sizes="(max-width: 768px) 100vw, 33vw"
-          className="object-cover transition-transform duration-500 group-hover:scale-110"
-          priority={index === 0}
-          loading={index === 0 ? "eager" : "lazy"}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
-        <div className="absolute bottom-0 left-0 p-6">
-          <h3 className="text-xl font-bold text-white font-outfit">
-            {article.title}
-          </h3>
-          <div className="mt-2 flex items-center">
-            <span className="text-orange-400 text-sm font-medium group-hover:text-orange-300 transition-colors">
-              Read more
-            </span>
-            <ArrowRight
-              size={14}
-              className="ml-1 text-orange-400 transition-transform group-hover:translate-x-1"
-            />
+  ({ article, index }: { article: Article; index: number }) => {
+    const [open, setOpen] = React.useState(false);
+    return (
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <motion.div
+            className="group relative overflow-hidden rounded-xl cursor-pointer border border-white/10 hover:border-orange-500/30 transition-colors duration-300"
+            variants={scaleInVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.4, delay: index * 0.1 }}
+          >
+            <div className="relative h-64 overflow-hidden">
+              <Image
+                src={article.image}
+                alt={article.title}
+                fill
+                sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                priority={index === 0}
+                loading={index === 0 ? "eager" : "lazy"}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
+              <div className="absolute bottom-0 left-0 p-6">
+                <h3 className="text-xl font-bold text-white font-outfit">
+                  {article.title}
+                </h3>
+                <div className="mt-2 flex items-center">
+                  <span className="text-orange-400 text-sm font-medium group-hover:text-orange-300 transition-colors">
+                    Read more
+                  </span>
+                  <ArrowRight
+                    size={14}
+                    className="ml-1 text-orange-400 transition-transform group-hover:translate-x-1"
+                  />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl bg-[#18181b] text-white p-8 rounded-2xl shadow-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              <span className="block text-2xl font-bold text-orange-400 mb-2 text-center">{article.title}</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="w-full flex flex-col items-center">
+            <div className="relative w-full h-80 mb-6 rounded-lg overflow-hidden border border-orange-400">
+              <Image
+                src={article.image}
+                alt={article.title}
+                fill
+                className="object-cover rounded-lg"
+              />
+            </div>
+            <DialogDescription className="text-gray-300 text-base text-center mt-2">
+              {article.description}
+            </DialogDescription>
           </div>
-        </div>
-      </div>
-    </motion.div>
-  )
+        </DialogContent>
+      </Dialog>
+    );
+  }
 );
 NewsCard.displayName = "NewsCard";
 
@@ -205,16 +234,29 @@ const Achievements = () => {
   const newspaperArticles = useMemo<Article[]>(
     () => [
       {
-        image: "/news/new2.png",
+        image: "/news/new1.jpg",
         title: "Vyuha's Health Camp Recognized by APSACS",
+        description: "Vyuha's health camp was recognized by APSACS for its outstanding service, providing free health checkups and awareness sessions to hundreds of students and community members. The initiative was widely covered in the local press for its impact and outreach.",
       },
       {
-        image: "/news/new2.png",
+        image: "/news/new2.jpg",
         title: "Innovation Fest Gains Media Attention",
+        description: "The Innovation Fest organized by Vyuha attracted significant media attention, showcasing student-led projects and technological advancements. The event fostered creativity and collaboration among participants, making headlines in regional newspapers.",
       },
       {
-        image: "/news/new2.png",
+        image: "/news/new3.jpg",
         title: "Students Launch New Startup with Vyuha",
+        description: "A group of students, mentored by Vyuha, successfully launched a new startup, receiving accolades from the press for their entrepreneurial spirit and innovative solutions. The story was featured as a testament to Vyuha's commitment to nurturing young talent.",
+      },
+      {
+        image: "/news/new4.png",
+        title: "Students Launch New Startup with Vyuha",
+        description: "A group of students, mentored by Vyuha, successfully launched a new startup, receiving accolades from the press for their entrepreneurial spirit and innovative solutions. The story was featured as a testament to Vyuha's commitment to nurturing young talent.",
+      },
+      {
+        image: "/news/new5.png",
+        title: "Students Launch New Startup with Vyuha",
+        description: "A group of students, mentored by Vyuha, successfully launched a new startup, receiving accolades from the press for their entrepreneurial spirit and innovative solutions. The story was featured as a testament to Vyuha's commitment to nurturing young talent.",
       },
     ],
     []

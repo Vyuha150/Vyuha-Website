@@ -21,10 +21,11 @@ const navLinks = [
   { name: "Home", href: "/" },
   { name: "Portfolio", href: "/origin" },
   { name: "Events", href: "/events" },
-  { name: "Clubs", href: "/club-partner" },
+  // { name: "Clubs", href: "/club-partner" },
 ];
 
 const connectLinks = [
+  { name: "Clubs", href: "/club-partner" },
   { name: "Membership", href: "/membership" },
   { name: "Podcast Connect", href: "/podcast-partner" },
   { name: "Career Boost", href: "/path" },
