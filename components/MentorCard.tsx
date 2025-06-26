@@ -6,7 +6,7 @@ import { Mentor } from "@/app/mentorship/type";
 
 interface MentorCardProps {
   mentor: Mentor;
-  onBook: () => void;
+  onBook?: () => void;
 }
 
 export default function MentorCard({ mentor, onBook }: MentorCardProps) {
@@ -14,7 +14,7 @@ export default function MentorCard({ mentor, onBook }: MentorCardProps) {
     <div className="bg-black rounded-lg shadow-lg overflow-hidden hover:shadow-xl hover:shadow-orange-500 hover:scale-105 transform transition-all duration-300">
       {/* Mentor Photo */}
       <img
-        src={`${process.env.NEXT_PUBLIC_API_URL}${mentor.photo}`}
+        src={mentor.photo}
         alt={mentor.name}
         className="w-full h-48 object-cover"
       />
@@ -44,12 +44,14 @@ export default function MentorCard({ mentor, onBook }: MentorCardProps) {
           >
             View Profile
           </a>
-          <button
-            onClick={onBook}
-            className="bg-white hover:bg-orange-500 text-orange-500 hover:text-white border border-orange-500 py-2 px-4 rounded-lg inline-block"
-          >
-            Book Mentor
-          </button>
+          {onBook && (
+            <button
+              onClick={onBook}
+              className="bg-white hover:bg-orange-500 text-orange-500 hover:text-white border border-orange-500 py-2 px-4 rounded-lg inline-block"
+            >
+              Book Mentor
+            </button>
+          )}
         </div>
       </div>
     </div>

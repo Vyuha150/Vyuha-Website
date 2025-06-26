@@ -21,10 +21,13 @@ const navLinks = [
   { name: "Home", href: "/" },
   { name: "Portfolio", href: "/origin" },
   { name: "Events", href: "/events" },
+  { name: "Business", href: "/business" },
+  
   // { name: "Clubs", href: "/club-partner" },
 ];
 
 const connectLinks = [
+  { name: "Team", href: "/team"},
   { name: "Clubs", href: "/club-partner" },
   { name: "Membership", href: "/membership" },
   { name: "Podcast Connect", href: "/podcast-partner" },

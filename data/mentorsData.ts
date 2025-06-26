@@ -37,7 +37,7 @@ export const mentors = [
   {
     id: 4,
     name: "G Srinivas Rao",
-    photo: "/mentor4.jpg",
+    photo: "/mentor1.jpg",
     skills: ["Yoga", "Mindfulness", "Personality Development"],
     industry: "Wellness & Personal Development",
     experience: "Expert in yoga, mindfulness, and personality development.",
@@ -48,7 +48,7 @@ export const mentors = [
   {
     id: 5,
     name: "E Ramarao",
-    photo: "/mentor5.jpg",
+    photo: "/mentor2.jpg",
     skills: [
       "Psychology",
       "Personality Development",
@@ -65,7 +65,7 @@ export const mentors = [
   {
     id: 6,
     name: "P Sai Vijay",
-    photo: "/mentor6.jpg",
+    photo: "/mentor3.jpg",
     skills: ["Unconventional Learning", "Clubs", "Student Activity Centres"],
     industry: "Education Innovation",
     experience:

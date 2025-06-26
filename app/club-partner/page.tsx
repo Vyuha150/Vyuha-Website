@@ -30,12 +30,23 @@ interface CollaborateFormData {
   document: File | null;
 }
 
+// Add new type for join club form
+interface JoinClubFormData {
+  studentName: string;
+  email: string;
+  phone: string;
+  clubName: string;
+  collegeName: string;
+  note: string;
+  document: File | null;
+}
+
 export default function ClubPartnerForms() {
   const router = useRouter();
 
   const handleSubmit = async (
     endpoint: string,
-    formData: CentralTeamFormData | OpenClubFormData | CollaborateFormData
+    formData: CentralTeamFormData | OpenClubFormData | CollaborateFormData | JoinClubFormData
   ): Promise<void> => {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -407,7 +418,7 @@ export default function ClubPartnerForms() {
             </motion.div>
           </div>
 
-          {/* Form 3: Collaborate with an Existing Club */}
+          {/* Form 3: Join an Existing Club */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
@@ -416,26 +427,30 @@ export default function ClubPartnerForms() {
               className="relative bg-black/70 p-8 rounded-lg shadow-xl hover:shadow-orange-500"
             >
               <h2 className="text-2xl md:text-3xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-yellow-400 text-transparent bg-clip-text">
-                Collaborate with an Existing Club
+                Join an Existing Club
               </h2>
               <form
                 className="space-y-6"
                 onSubmit={(e: FormEvent<HTMLFormElement>) => {
                   e.preventDefault();
                   const target = e.target as HTMLFormElement;
-                  const formData: CollaborateFormData = {
+                  const formData: JoinClubFormData = {
+                    studentName: target["student-name"].value,
+                    email: target.email.value,
+                    phone: target.phone.value,
                     clubName: target["club-name"].value,
                     collegeName: target["college-name"].value,
-                    phone: target.phone.value,
-                    collaborationDetails: target["collaboration-details"].value,
+                    note: target["note"].value,
                     document: target.document.files?.[0] || null,
                   };
 
                   if (
+                    !formData.studentName ||
+                    !formData.email ||
+                    !formData.phone ||
                     !formData.clubName ||
                     !formData.collegeName ||
-                    !formData.phone ||
-                    !formData.collaborationDetails
+                    !formData.note
                   ) {
                     alert(
                       "All fields are required. Please fill out all fields."
@@ -443,38 +458,32 @@ export default function ClubPartnerForms() {
                     return;
                   }
 
-                  handleSubmit("collaborate", formData).then(() => {
+                  handleSubmit("join-existing-club", formData).then(() => {
                     target.reset();
                   });
                 }}
               >
                 <div>
-                  <label
-                    htmlFor="club-name"
-                    className="block text-md font-medium"
-                  >
-                    Club Name
+                  <label htmlFor="student-name" className="block text-md font-medium">
+                    Student Name
                   </label>
                   <input
                     type="text"
-                    id="club-name"
-                    name="club-name"
-                    placeholder="Your club name"
+                    id="student-name"
+                    name="student-name"
+                    placeholder="Your name"
                     className="w-full bg-transparent mt-2 p-[6px] border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                   />
                 </div>
                 <div>
-                  <label
-                    htmlFor="college-name"
-                    className="block text-md font-medium"
-                  >
-                    College Name
+                  <label htmlFor="email" className="block text-md font-medium">
+                    Email
                   </label>
                   <input
-                    type="text"
-                    id="college-name"
-                    name="college-name"
-                    placeholder="Your college name"
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Your email"
                     className="w-full bg-transparent mt-2 p-[6px] border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                   />
                 </div>
@@ -492,15 +501,52 @@ export default function ClubPartnerForms() {
                 </div>
                 <div>
                   <label
-                    htmlFor="collaboration-details"
+                    htmlFor="club-name"
                     className="block text-md font-medium"
                   >
-                    Collaboration Details
+                    Club Name
+                  </label>
+                  <select
+                    id="club-name"
+                    name="club-name"
+                    className="w-full bg-transparent mt-2 p-[6px] border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                    defaultValue=""
+                  >
+                    <option value="" className="text-black" disabled>Select a club</option>
+                    <option className="text-black" value="Safe Life">Safe Life</option>
+                    <option className="text-black" value="Electoral Literacy Club">Electoral Literacy Club</option>
+                    <option className="text-black" value="Innovation and Incubation club">Innovation and Incubation club</option>
+                    <option className="text-black" value="Vidhura Ablack Entrepreneurship Club">Vidhura AI and Entrepreneurship Club</option>
+                    <option className="text-black" value="Spirituality Club">Spirituality Club</option>
+                    <option className="text-black" value="Yoga Club">Yoga Club</option>
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="college-name"
+                    className="block text-md font-medium"
+                  >
+                    College Name
+                  </label>
+                  <input
+                    type="text"
+                    id="college-name"
+                    name="college-name"
+                    placeholder="Your college name"
+                    className="w-full bg-transparent mt-2 p-[6px] border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="note"
+                    className="block text-md font-medium"
+                  >
+                    Why do you want to join this club?
                   </label>
                   <textarea
-                    id="collaboration-details"
-                    name="collaboration-details"
-                    placeholder="Describe how you want to collaborate with Vyuha"
+                    id="note"
+                    name="note"
+                    placeholder="Tell us why you want to join this club"
                     rows={4}
                     className="w-full bg-transparent mt-2 p-[6px] border border-white text-white rounded-lg focus:ring-2 focus:ring-orange-500 outline-none"
                   ></textarea>
@@ -525,7 +571,7 @@ export default function ClubPartnerForms() {
                   type="submit"
                   className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-semibold rounded-lg shadow-md transition-transform"
                 >
-                  Submit
+                  Join Club
                 </motion.button>
               </form>
             </motion.div>
@@ -537,7 +583,7 @@ export default function ClubPartnerForms() {
             >
               <img
                 src="/club-partner/club-partner-2.jpg"
-                alt="Collaborate with an Existing Club"
+                alt="Join with an Existing Club"
                 className="w-full h-auto rounded-xl shadow-lg"
               />
             </motion.div>

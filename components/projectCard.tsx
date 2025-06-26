@@ -20,7 +20,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
     <div className="bg-black rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
       {/* Project Image */}
       <img
-        src={`${process.env.NEXT_PUBLIC_API_URL}${project.image}`}
+        src={project.image}
         alt={project.title}
         className="w-full h-48 object-cover"
       />

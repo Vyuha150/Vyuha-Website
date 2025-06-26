@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Card } from "@/components/ui/card";
@@ -49,6 +49,10 @@ const formSchema = z.object({
       }
     ),
   interests: z.string().min(10, "Please describe your interests"),
+  studentId: z.string().optional(),
+  gstNumber: z.string().optional(),
+  gender: z.string().optional(),
+  empowermentGoals: z.string().optional(),
 });
 
 export default function MembershipPage() {
@@ -69,6 +73,8 @@ export default function MembershipPage() {
     },
     mode: "onSubmit",
   });
+
+  const selectedType = useWatch({ control: form.control, name: "membershipType" });
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -415,23 +421,143 @@ export default function MembershipPage() {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="organization"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Organization</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Company/College Name"
-                              {...field}
-                              className="border-orange-400"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+                    {/* Conditional fields based on membershipType */}
+                    {selectedType === "college" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="organization"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>College Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Your College Name"
+                                  {...field}
+                                  className="border-orange-400"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="studentId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Student ID</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Your Student ID"
+                                  {...field}
+                                  className="border-orange-400"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                    {selectedType === "business" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="organization"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Business Name</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Your Business Name"
+                                  {...field}
+                                  className="border-orange-400"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="gstNumber"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>GST Number</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="GST Number"
+                                  {...field}
+                                  className="border-orange-400"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                    {selectedType === "women-empowerment" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="gender"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Gender</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Your Gender"
+                                  {...field}
+                                  className="border-orange-400"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="empowermentGoals"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Empowerment Goals</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Your Empowerment Goals"
+                                  {...field}
+                                  className="border-orange-400"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
+                    {/* Default fields for other types */}
+                    {selectedType !== "college" && selectedType !== "business" && selectedType !== "women-empowerment" && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="organization"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Organization</FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Company/College Name"
+                                  {...field}
+                                  className="border-orange-400"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <FormField

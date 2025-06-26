@@ -98,6 +98,21 @@ export default function PodcastPartnerForm() {
       title: "Podcast with Mahesh Yadav Eluru MP",
       url: "https://www.instagram.com/reel/C6xUCWVJsBM/?igsh=MXg0NGg1NDkyYmkzZg== ",
     },
+    {
+      id: "4",
+      title: "Podcast with  Dr. M. Bapuji",
+      url: "https://www.instagram.com/reel/CxfbTz5IeaK/?igsh=ZXp3cWQ3NThoMXNw",
+    },
+    {
+      id: "5",
+      title: "Podcast with  Dr. M. Bapuji",
+      url: "https://www.instagram.com/reel/Cw78P37yOtp/?igsh=cGRpYTE4cTlpY2Rk",
+    },
+    {
+      id: "6",
+      title: "Podcast with  Putta Mahesh Kumar Garu",
+      url: "https://www.instagram.com/reel/Cw2zWMMMw1F/?igsh=aXU0N3hpMnY3aHll",
+    },
   ];
 
   // Helper function to extract YouTube video ID and generate thumbnail URL
