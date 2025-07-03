@@ -1,18 +1,25 @@
 "use client";
 
 import "@/styles/globals.css";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import IconicLoader from "@/components/IconicLoader";
 
 export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [loading, setLoading] = useState(true);
 
   // Define routes where Navbar and Footer should be excluded
   const excludeNavbarFooter = ["/auth/sign-in", "/auth/sign-up"].includes(
     pathname
   );
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 2000); // Show loader for 2 seconds
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <html lang="en">
@@ -39,7 +46,7 @@ export default function Layout({ children }: { children: ReactNode }) {
 
           {/* Page Content */}
           <main className="flex-1 w-full max-w-7xl mx-auto sm:px-10 pt-16 md:pt-10">
-            {children}
+            {loading ? <IconicLoader /> : children}
           </main>
 
           {/* Footer */}

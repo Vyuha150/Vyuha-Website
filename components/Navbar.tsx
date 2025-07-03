@@ -11,6 +11,8 @@ import {
   Settings,
   ChevronDown,
   LogOut,
+  MinusIcon,
+  Minus,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "/public/logo.png";
@@ -46,6 +48,10 @@ const additionalLinks = [
   { name: "Projects", href: "/projects" },
   { name: "Join Vyuha", href: "/join" },
   { name: "Contact", href: "/contact" },
+];
+
+const profileLinks = [
+  { name: "My Profile", href: "/profile" },
 ];
 
 export default function Navbar() {
@@ -284,6 +290,14 @@ export default function Navbar() {
                         <Bell className="inline w-4 h-4 mr-2" />
                         Notifications
                       </Link>
+                      <Link
+                        href="/profile/student-participation"
+                        className="block px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        <Minus className="inline w-4 h-4 mr-2" />
+                        Student Participation
+                      </Link>
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
@@ -447,6 +461,13 @@ export default function Navbar() {
                         <Bell className="w-4 h-4" />
                         <span>Notifications</span>
                       </Link>
+                      {/* <Link
+                        href="/profile/student-participation"
+                        className="flex items-center space-x-2 text-sm font-medium text-white hover:text-orange-400 transition-all mb-2"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <span>Student Participation</span>
+                      </Link> */}
                       <button
                         onClick={handleLogout}
                         className="text-sm font-medium text-white hover:text-orange-400 transition-all"
