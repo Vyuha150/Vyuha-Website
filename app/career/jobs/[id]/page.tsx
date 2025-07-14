@@ -4,9 +4,23 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "next/navigation";
 
+interface Job {
+  _id: string;
+  title: string;
+  company: string | { _id: string; name: string };
+  location: string;
+  jobType: string;
+  description: string;
+  responsibilities?: string[];
+  qualifications?: string[];
+  image?: string;
+  status: 'active' | 'inactive';
+  createdAt: string;
+}
+
 export default function JobDetailsPage() {
   const params = useParams();
-  const [job, setJob] = useState<any>(null);
+  const [job, setJob] = useState<Job | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,7 +40,7 @@ export default function JobDetailsPage() {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
         const response = await axios.get(
-          `${apiUrl}/api/job-application/${jobId}`
+          `${apiUrl}/api/jobs/${jobId}`
         );
         setJob(response.data);
         setIsLoading(false);
@@ -82,9 +96,9 @@ export default function JobDetailsPage() {
       data.append("jobId", params.id as string);
 
       // Send POST request to the backend
-      const response = await axios.post(
-        `${apiUrl}/api/companies/apply-job`,
-        data,
+              const response = await axios.post(
+          `${apiUrl}/api/job-applicants`,
+          data,
         {
           headers: {
             "Content-Type": "multipart/form-data",
@@ -142,7 +156,7 @@ export default function JobDetailsPage() {
       <div className="p-8 rounded-lg shadow-lg">
         <h1 className="text-4xl font-bold text-orange-500 mb-4">{job.title}</h1>
         <p className="text-gray-300 text-lg mb-4">
-          <strong>Company:</strong> {job.company}
+          <strong>Company:</strong> {typeof job.company === 'string' ? job.company : job.company.name}
         </p>
         <p className="text-gray-300 text-lg mb-4">
           <strong>Location:</strong> {job.location}
@@ -161,7 +175,7 @@ export default function JobDetailsPage() {
         </section>
 
         {/* Responsibilities */}
-        {job.responsibilities && (
+        {job.responsibilities && job.responsibilities.length > 0 && (
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-orange-500 mb-4">
               Responsibilities
@@ -177,7 +191,7 @@ export default function JobDetailsPage() {
         )}
 
         {/* Qualifications */}
-        {job.qualifications && (
+        {job.qualifications && job.qualifications.length > 0 && (
           <section className="mb-8">
             <h2 className="text-2xl font-bold text-orange-500 mb-4">
               Qualifications

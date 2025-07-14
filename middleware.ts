@@ -63,5 +63,5 @@ export function middleware(req: Request) {
 }
 
 export const config = {
-  matcher: ["/profile/:path*", "/quiz/:path*", "/resources/:path*"],
+  matcher: ["/profile/:path*", "/quiz/:path*", "/resources/:path*", "/dashboard/:path*"],
 };

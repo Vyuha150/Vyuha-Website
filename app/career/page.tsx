@@ -22,7 +22,7 @@ export default function CareerServicesPage() {
   useEffect(() => {
     async function fetchJobs() {
       try {
-        const response = await axios.get(`${apiUrl}/api/job-application`);
+        const response = await axios.get(`${apiUrl}/api/jobs`);
         setJobs(response.data);
         console.log("Jobs fetched:", response.data);
         setFilteredJobs(response.data);

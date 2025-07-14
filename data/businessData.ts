@@ -4,6 +4,10 @@ export interface ServiceCategory {
     title: string;
     items: string[];
     links?: string[];
+    actionButton?: {
+      text: string;
+      href: string;
+    };
   }
   
   export interface BusinessServiceSection {
@@ -54,7 +58,11 @@ export interface ServiceCategory {
             "Mobile App Development (iOS, Android, Cross-platform)",
             "E-commerce Development (Shopify, WooCommerce, Custom Platforms)",
             "Web Portals (Admin Dashboards, CRMs, Booking Engines, etc.)"
-          ]
+          ],
+          actionButton: {
+            text: "View Projects",
+            href: "/projects"
+          }
         },
         {
           title: "AI & Automation",
@@ -206,7 +214,7 @@ export interface ServiceCategory {
           title: "Electoral Literacy Club (AICTE-guided)",
           items: [
             "Democracy and Voter Rights Education",
-            "Part of Election Commission’s SVEEP campaign",
+            "Part of Election Commission's SVEEP campaign",
             "Engaged 1,500+ students and enabled 500+ new voter registrations"
           ],
           links: [

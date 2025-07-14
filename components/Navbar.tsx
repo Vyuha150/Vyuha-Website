@@ -18,13 +18,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import logo from "/public/logo.png";
 import { usePathname, useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import { hasRole, isAuthenticated, logout } from "@/utils/auth";
 
 const navLinks = [
   { name: "Home", href: "/" },
   { name: "Portfolio", href: "/origin" },
+  { name: "About", href: "/about" },
   { name: "Events", href: "/events" },
+  { name: "VCC Events", href: "/vcc-events" },
+  { name: "Student Zone", href: "/studentzone" },
   { name: "Business", href: "/business" },
-  
   // { name: "Clubs", href: "/club-partner" },
 ];
 
@@ -58,6 +61,7 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isVccMember, setIsVccMember] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showConnectMenu, setShowConnectMenu] = useState(false);
   const [showAdditionalMenu, setShowAdditionalMenu] = useState(false);
@@ -72,11 +76,12 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Check login status on the client side
+  // Check login status and role on the client side
   useEffect(() => {
     if (typeof window !== "undefined") {
       const authToken = Cookies.get("authToken");
       setIsLoggedIn(!!authToken);
+      setIsVccMember(hasRole('vcc_member'));
     }
   }, []);
 
@@ -87,10 +92,9 @@ export default function Navbar() {
 
   // Handle Logout
   const handleLogout = () => {
-    Cookies.remove("authToken");
-    Cookies.remove("userId");
-    Cookies.remove("role");
     setIsLoggedIn(false);
+    setIsVccMember(false);
+    logout();
     router.push("/auth/sign-in");
   };
 
@@ -290,14 +294,16 @@ export default function Navbar() {
                         <Bell className="inline w-4 h-4 mr-2" />
                         Notifications
                       </Link>
-                      <Link
-                        href="/profile/student-participation"
-                        className="block px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
-                        onClick={() => setShowProfileMenu(false)}
-                      >
-                        <Minus className="inline w-4 h-4 mr-2" />
-                        Student Participation
-                      </Link>
+                      {isVccMember && (
+                        <Link
+                          href="/profile/student-participation"
+                          className="block px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
+                          onClick={() => setShowProfileMenu(false)}
+                        >
+                          <Minus className="inline w-4 h-4 mr-2" />
+                          Student Participation
+                        </Link>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="w-full text-left px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
@@ -461,13 +467,16 @@ export default function Navbar() {
                         <Bell className="w-4 h-4" />
                         <span>Notifications</span>
                       </Link>
-                      {/* <Link
-                        href="/profile/student-participation"
-                        className="flex items-center space-x-2 text-sm font-medium text-white hover:text-orange-400 transition-all mb-2"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        <span>Student Participation</span>
-                      </Link> */}
+                      {isVccMember && (
+                        <Link
+                          href="/profile/student-participation"
+                          className="flex items-center space-x-2 text-sm font-medium text-white hover:text-orange-400 transition-all mb-2"
+                          onClick={() => setIsOpen(false)}
+                        >
+                          <Minus className="w-4 h-4" />
+                          <span>Student Participation</span>
+                        </Link>
+                      )}
                       <button
                         onClick={handleLogout}
                         className="text-sm font-medium text-white hover:text-orange-400 transition-all"

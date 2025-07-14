@@ -1,67 +1,169 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { jwtDecode } from "jwt-decode";
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [status, setStatus] = useState<"pending" | "success" | "error">("pending");
+  const [status, setStatus] = useState<"ready" | "verifying" | "success" | "error">("ready");
   const [message, setMessage] = useState("");
+  const [email, setEmail] = useState("");
+  const [token, setToken] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
-    const token = searchParams.get("token");
-    if (!token) {
+    const tokenParam = searchParams.get("token");
+    if (!tokenParam) {
       setStatus("error");
       setMessage("Invalid or missing verification token.");
       return;
     }
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/verify-email?token=${token}`)
-      .then(async (res) => {
-        const data = await res.json();
-        if (res.ok) {
-          setStatus("success");
-          setMessage("Email successfully verified!");
-        } else {
-          setStatus("error");
-          setMessage(data.message || "Verification failed.");
-        }
-      })
-      .catch(() => {
-        setStatus("error");
-        setMessage("Something went wrong. Please try again later.");
-      });
+
+    try {
+      // Decode the JWT token to extract email
+      const decoded: any = jwtDecode(tokenParam);
+      setEmail(decoded.email || "Unknown");
+      setToken(tokenParam);
+      setStatus("ready");
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      setStatus("error");
+      setMessage("Invalid verification token format.");
+    }
   }, [searchParams]);
 
+  const handleVerifyEmail = async () => {
+    if (!token) return;
+    
+    setIsVerifying(true);
+    setStatus("verifying");
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/verify-email?token=${token}`
+      );
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setStatus("success");
+        setMessage(data.message);
+        // Automatically redirect to login after 5 seconds
+        setTimeout(() => {
+          router.push("/auth/sign-in");
+        }, 5000);
+      } else {
+        setStatus("error");
+        setMessage(data.message || "Verification failed. Please try again.");
+      }
+    } catch (error) {
+      setStatus("error");
+      setMessage("Something went wrong. Please try again later.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   return (
-    <main className="min-h-screen flex items-center justify-center  px-4">
+    <main className="min-h-screen flex items-center justify-center px-4 ">
       <motion.div
         initial={{ opacity: 0, y: 50 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut", bounce: 0.3 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
         className="w-full max-w-md rounded-3xl shadow-lg bg-black/60 border border-orange-500 p-8 text-center"
       >
         <h1 className="text-2xl md:text-3xl font-bold text-orange-500 mb-6">
           Email Verification
         </h1>
-        {status === "pending" && (
-          <p className="text-white">Verifying your email, please wait...</p>
+
+        {status === "ready" && (
+          <div className="space-y-6">
+            <div className="w-16 h-16 mx-auto bg-blue-500/10 rounded-full flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-blue-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"
+                />
+              </svg>
+            </div>
+            <div className="space-y-2">
+              <p className="text-white font-semibold">Verify email address:</p>
+              <p className="text-orange-400 text-lg font-mono">{email}</p>
+            </div>
+            <button
+              onClick={handleVerifyEmail}
+              disabled={isVerifying}
+              className="w-full px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isVerifying ? "Verifying..." : "Confirm & Verify"}
+            </button>
+          </div>
         )}
+
+        {status === "verifying" && (
+          <div className="space-y-4">
+            <div className="animate-spin w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full mx-auto"></div>
+            <p className="text-white">Verifying your email address...</p>
+          </div>
+        )}
+
         {status === "success" && (
-          <>
-            <p className="text-green-400 font-semibold mb-4">{message}</p>
+          <div className="space-y-6">
+            <div className="w-16 h-16 mx-auto bg-green-500/10 rounded-full flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-green-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <p className="text-green-400 font-semibold">{message}</p>
+            <p className="text-gray-400 text-sm">
+              Redirecting to login page in 5 seconds...
+            </p>
             <Link
               href="/auth/sign-in"
               className="inline-block mt-4 px-6 py-2 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition"
             >
               Go to Login
             </Link>
-          </>
+          </div>
         )}
+
         {status === "error" && (
-          <>
+          <div className="space-y-6">
+            <div className="w-16 h-16 mx-auto bg-red-500/10 rounded-full flex items-center justify-center">
+              <svg
+                className="w-8 h-8 text-red-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </div>
             <p className="text-red-400 font-semibold mb-4">{message}</p>
             <Link
               href="/auth/sign-up"
@@ -69,7 +171,7 @@ export default function VerifyEmailPage() {
             >
               Register Again
             </Link>
-          </>
+          </div>
         )}
       </motion.div>
     </main>

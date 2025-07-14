@@ -22,7 +22,7 @@ export default function FormTeamPage() {
     e.preventDefault();
 
     const membersArray = formData.members
-      .split(",")
+      .split(/[,\n]/)
       .map((member) => member.trim())
       .filter((member) => member !== "");
 
@@ -107,7 +107,7 @@ export default function FormTeamPage() {
               value={formData.members}
               onChange={handleChange}
               className="w-full p-3 bg-black border border-gray-700 text-white rounded-lg"
-              placeholder="Enter team members' names, separated by commas"
+              placeholder="Enter team members' names (one per line or comma-separated)"
               rows={4}
               required
             ></textarea>

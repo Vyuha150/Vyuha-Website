@@ -8,11 +8,15 @@ interface Course {
   title: string;
   instructor: string;
   instructorPhoto: string;
+  coursePhoto?: string;
   rating: number;
   reviews: number;
-  price: string;
+  price: number;
   format: string;
   description: string;
+  duration: string;
+  level: string;
+  status?: string;
 }
 
 export default function CourseCard({ course }: { course: Course }) {
@@ -21,9 +25,13 @@ export default function CourseCard({ course }: { course: Course }) {
       {/* Course Image */}
       <div className="relative h-40 bg-gray-700">
         <img
-          src={`/course${1 || course._id}.jpg`} // Assuming images are named as course1.jpg, course2.jpg, etc.
+          src={course.coursePhoto || `/course${1 || course._id}.jpg`}
           alt={course.title}
           className="w-full h-full object-cover"
+          onError={(e) => {
+            const img = e.target as HTMLImageElement;
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4gPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2Y3ZjdmNyIvPiA8dGV4dCB4PSI1MCUiIHk9IjUwJSIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzk5OTk5OSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+Q291cnNlIEltYWdlPC90ZXh0PiA8L3N2Zz4=';
+          }}
         />
         <span className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-semibold px-2 py-1 rounded">
           {course.format}
@@ -55,7 +63,7 @@ export default function CourseCard({ course }: { course: Course }) {
 
         {/* Price */}
         <div className="text-sm text-orange-500 font-semibold mb-4">
-          {course.price}
+          ₹{course.price}
         </div>
 
         {/* Description */}

@@ -11,23 +11,80 @@ import {
   Facebook,
   Twitter,
   Linkedin,
+  Users,
+  Tag,
+  Globe,
+  FileText,
+  Video,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
+import Cookies from "js-cookie";
+
+interface Event {
+  _id: string;
+  name: string;
+  description: string;
+  date: string;
+  time: string;
+  location: string;
+  organizer: string;
+  organizerBio: string;
+  organizerPhoto: string;
+  platformLink?: string;
+  fees: string;
+  materials?: string;
+  isRecorded: boolean;
+  image: string;
+  category: string;
+  mode: 'online' | 'offline';
+  targetAudience: string;
+  logo: string;
+  isVccEvent?: boolean;
+  registrationLimit?: number | null;
+  registrationCount?: number;
+  isRegistrationFull?: boolean;
+  registrations?: Array<{
+    _id: string;
+    userId: {
+      _id: string;
+      username: string;
+      email: string;
+    };
+    registeredAt: string;
+  }>;
+}
 
 export default function EventDetailsPage() {
   const { id } = useParams();
-  const [event, setEvent] = useState<any | null>(null);
+  const [event, setEvent] = useState<Event | null>(null);
   const [timeLeft, setTimeLeft] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
-  });
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userDetails, setUserDetails] = useState<{ id: string; role: string; email: string } | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registrationError, setRegistrationError] = useState<string | null>(null);
+
+  // Fetch user details from token
+  useEffect(() => {
+    const token = Cookies.get('authToken');
+    if (token) {
+      try {
+        const tokenParts = token.split('.');
+        const payload = JSON.parse(atob(tokenParts[1]));
+        setUserDetails({
+          id: payload.userId,
+          role: payload.role,
+          email: payload.email
+        });
+        // User details set for registration checks
+      } catch (error) {
+        console.error('Error parsing token:', error);
+      }
+    }
+  }, []);
 
   // Fetch event details from the backend
   useEffect(() => {
@@ -71,184 +128,249 @@ export default function EventDetailsPage() {
     }
   }, [event]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+
+  const handleRegister = async () => {
+    setIsRegistering(true);
+    setRegistrationError(null);
+
     try {
+      const token = Cookies.get('authToken');
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/events/register`,
         {
           eventId: id,
-          ...formData,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
       );
 
       if (response.status === 200) {
         alert("Registration successful!");
         setIsModalOpen(false);
-        setFormData({ name: "", email: "", phone: "", message: "" });
+        // Refresh event data to show updated registration count
+        const refreshResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/events/${id}`
+        );
+        if (refreshResponse.status === 200) {
+          setEvent(refreshResponse.data);
+        }
       }
     } catch (error: any) {
       if (error.response && error.response.status === 400) {
-        alert(error.response.data.message);
+        setRegistrationError(error.response.data.message);
+      } else if (error.response && error.response.status === 403) {
+        setRegistrationError("You don't have permission to register for this event.");
       } else {
         console.error("Error registering for event:", error);
-        alert("An error occurred. Please try again.");
+        setRegistrationError("An error occurred. Please try again.");
       }
+    } finally {
+      setIsRegistering(false);
     }
   };
 
   if (!event) {
-    return <p className="text-center text-gray-500">Event not found.</p>;
+    return <p className="text-center text-gray-500">Loading event details...</p>;
   }
 
   return (
-    <main className="min-h-screen py-20 px-4 md:px-6 lg:px-8 text-white">
-      <div className="max-w-7xl mx-auto">
-        {/* Event Image */}
-        <div className="relative w-full h-64 md:h-96 mb-8">
-          <img
-            src={`${process.env.NEXT_PUBLIC_API_URL}${event.image}`}
-            alt={event.name}
-            className="w-full h-full object-cover rounded-lg shadow-lg"
-          />
-        </div>
-
-        {/* Event Title */}
-        <motion.h1
-          className="text-5xl font-bold mb-6 text-center"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+    <div className="min-h-screen bg-black text-white">
+      {/* Hero Section */}
+      <div className="relative h-[60vh]">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${event.image})` }}
         >
-          {event.name}
-        </motion.h1>
-
-        {/* Countdown Timer */}
-        <div className="text-lg font-medium text-orange-500 mb-8 text-center">
-          {timeLeft && <p>Time Left: {timeLeft}</p>}
+          <div className="absolute inset-0 bg-black bg-opacity-60" />
         </div>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center">
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="text-4xl md:text-5xl font-bold mb-4"
+            >
+              {event.name}
+            </motion.h1>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="flex items-center justify-center space-x-4 text-gray-300"
+            >
+              <span className="flex items-center">
+                <CalendarIcon className="w-5 h-5 mr-2" />
+                {new Date(event.date).toLocaleDateString()}
+              </span>
+              <span className="flex items-center">
+                <Clock className="w-5 h-5 mr-2" />
+                {event.time}
+              </span>
+              <span className="flex items-center">
+                <MapPin className="w-5 h-5 mr-2" />
+                {event.location}
+              </span>
+            </motion.div>
+          </div>
+        </div>
+      </div>
 
-        {/* Event Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          {/* Left Column */}
-          <div>
-            <p className="text-gray-300 mb-6 leading-relaxed">
-              {event.description}
-            </p>
+      {/* Event Details */}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="md:col-span-2 space-y-8">
+            <div className="bg-gray-900 rounded-lg p-6">
+              <h2 className="text-2xl font-bold mb-4">About the Event</h2>
+              <p className="text-gray-300 whitespace-pre-wrap">{event.description}</p>
+            </div>
 
-            {/* Date, Time, Location */}
-            <div className="flex flex-col gap-4 text-gray-400">
-              <div className="flex items-center gap-2">
-                <CalendarIcon className="w-5 h-5 text-orange-500" />
-                <span>{event.date}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-orange-500" />
-                <span>{event.time}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-orange-500" />
-                <span>{event.location}</span>
+            <div className="bg-gray-900 rounded-lg p-6">
+              <h2 className="text-2xl font-bold mb-4">Event Details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center space-x-3">
+                  <Tag className="w-5 h-5 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-gray-400">Category</p>
+                    <p className="text-white">{event.category}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Users className="w-5 h-5 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-gray-400">Target Audience</p>
+                    <p className="text-white">{event.targetAudience}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <Globe className="w-5 h-5 text-orange-500" />
+                  <div>
+                    <p className="text-sm text-gray-400">Mode</p>
+                    <p className="text-white">{event.mode}</p>
+                  </div>
+                </div>
+                {event.materials && (
+                  <div className="flex items-center space-x-3">
+                    <FileText className="w-5 h-5 text-orange-500" />
+                    <div>
+                      <p className="text-sm text-gray-400">Materials</p>
+                      <p className="text-white">{event.materials}</p>
+                    </div>
+                  </div>
+                )}
+                {event.isRecorded && (
+                  <div className="flex items-center space-x-3">
+                    <Video className="w-5 h-5 text-orange-500" />
+                    <div>
+                      <p className="text-sm text-gray-400">Recording</p>
+                      <p className="text-white">Event will be recorded</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Fees and Materials */}
-            <div className="mt-6">
-              <h3 className="text-lg font-bold mb-2">Fees</h3>
-              <p className="text-gray-300">${event.fees || "Free"}</p>
-              <h3 className="text-lg font-bold mt-4 mb-2">Materials</h3>
-              <p className="text-gray-300">
-                {event.materials || "No materials required"}
-              </p>
-            </div>
-
-            {/* Registration Button */}
-            <div className="mt-6">
-              <Button
-                size="lg"
-                className="bg-orange-500 hover:bg-orange-600 hover:scale-105 duration-300 w-full"
-                onClick={() => setIsModalOpen(true)}
-              >
-                Register Now
-              </Button>
+            <div className="bg-gray-900 rounded-lg p-6">
+              <h2 className="text-2xl font-bold mb-4">Organizer</h2>
+              <div className="flex items-start space-x-4">
+                <img
+                  src={event.organizerPhoto}
+                  alt={event.organizer}
+                  className="w-16 h-16 rounded-full object-cover"
+                />
+                <div>
+                  <h3 className="text-xl font-semibold">{event.organizer}</h3>
+                  <p className="text-gray-300 mt-2">{event.organizerBio}</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Right Column */}
-          <div>
-            {/* Organizer Info */}
-            <div className="flex items-center gap-4 mb-6">
-              <img
-                src={`${process.env.NEXT_PUBLIC_API_URL}${event.organizerPhoto}`}
-                alt={event.organizer}
-                className="w-16 h-16 rounded-full object-cover"
-              />
-              <div>
-                <h3 className="text-lg font-bold">{event.organizer}</h3>
-                <p className="text-gray-400">{event.organizerBio}</p>
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <div className="bg-gray-900 rounded-lg p-6">
+              <div className="text-center mb-6">
+                <p className="text-sm text-gray-400">Time Remaining</p>
+                <p className="text-2xl font-bold text-orange-500">{timeLeft}</p>
               </div>
+              <div className="text-center mb-6">
+                <p className="text-sm text-gray-400">Registration Fee</p>
+                <p className="text-2xl font-bold">{event.fees}</p>
+              </div>
+              {event.registrationLimit && (
+                <div className="text-center mb-6">
+                  <p className="text-sm text-gray-400">Registrations</p>
+                  <p className="text-xl font-bold">
+                    {event.registrationCount || 0}/{event.registrationLimit}
+                  </p>
+                  {event.isRegistrationFull && (
+                    <p className="text-red-500 text-sm mt-1">Registration Full</p>
+                  )}
+                </div>
+              )}
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                disabled={event.isRegistrationFull}
+                className="w-full bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
+              >
+                {event.isRegistrationFull ? 'Registration Full' : 'Register Now'}
+              </Button>
             </div>
 
-            {/* Webinar Link */}
             {event.platformLink && (
-              <div className="mt-6">
-                <h3 className="text-lg font-bold mb-2">Webinar Link</h3>
+              <div className="bg-gray-900 rounded-lg p-6">
+                <h3 className="font-semibold mb-4">Platform Link</h3>
                 <a
                   href={event.platformLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-orange-500 hover:underline"
+                  className="text-orange-500 hover:text-orange-600 break-all"
                 >
-                  Join Webinar
+                  {event.platformLink}
                 </a>
               </div>
             )}
 
-            {/* Recording Availability */}
-            {event.isRecorded && (
-              <div className="mt-6">
-                <h3 className="text-lg font-bold mb-2">Recording</h3>
-                <p className="text-gray-400">
-                  This event will be recorded. The recording will be available
-                  after the event.
-                </p>
+            <div className="bg-gray-900 rounded-lg p-6">
+              <h3 className="font-semibold mb-4">Share Event</h3>
+              <div className="flex justify-center space-x-4">
+                <a
+                  href={`https://facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                    window.location.href
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:text-blue-600"
+                >
+                  <Facebook className="w-6 h-6" />
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(
+                    window.location.href
+                  )}&text=${encodeURIComponent(event.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-500"
+                >
+                  <Twitter className="w-6 h-6" />
+                </a>
+                <a
+                  href={`https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(
+                    window.location.href
+                  )}&title=${encodeURIComponent(event.name)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700"
+                >
+                  <Linkedin className="w-6 h-6" />
+                </a>
               </div>
-            )}
-          </div>
-        </div>
-
-        {/* Social Sharing */}
-        <div className="mt-12 text-center">
-          <h3 className="text-lg font-bold mb-4">Share This Event</h3>
-          <div className="flex justify-center gap-4">
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 text-orange-500 border-blue-500"
-            >
-              <Facebook className="w-4 h-4" />
-              Facebook
-            </Button>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 text-orange-500 border-blue-400"
-            >
-              <Twitter className="w-4 h-4" />
-              Twitter
-            </Button>
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 text-orange-500 border-blue-600"
-            >
-              <Linkedin className="w-4 h-4" />
-              LinkedIn
-            </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -256,93 +378,83 @@ export default function EventDetailsPage() {
       {/* Registration Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
-          <div className="bg-black p-8 rounded-lg shadow-lg w-full max-w-md border border-orange-500">
+          <div className="bg-black text-white border border-orange-500 p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-2xl font-bold mb-4 text-white">
               Register for {event.name}
             </h2>
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Name
-                </label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Your name"
-                  className="rounded-lg"
-                />
+
+            {!userDetails ? (
+              <div className="text-center py-4">
+                <p className="text-red-500 mb-4">Please log in to register for events.</p>
+                <Link href="/auth/sign-in" className="text-orange-500 hover:text-orange-600">
+                  Go to Login
+                </Link>
               </div>
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Your email"
-                  className="rounded-lg"
-                />
+            ) : event?.isVccEvent && userDetails.role !== 'vcc_member' ? (
+              <div className="text-center py-4">
+                <p className="text-red-500 mb-4">This event is only open to VCC members.</p>
+                <Link href="/membership" className="text-orange-500 hover:text-orange-600">
+                  Become a VCC Member
+                </Link>
               </div>
-              <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Phone
-                </label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="Your phone number"
-                  className="rounded-lg"
-                />
+            ) : !['user', 'vcc_member'].includes(userDetails.role) ? (
+              <div className="text-center py-4">
+                <p className="text-red-500">Only users and VCC members can register for events.</p>
               </div>
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Message (Optional)
-                </label>
-                <Textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  placeholder="Any additional message"
-                  rows={3}
-                  className="rounded-lg"
-                />
+            ) : event.isRegistrationFull ? (
+              <div className="text-center py-4">
+                <p className="text-red-500 mb-4">
+                  Sorry, registrations are closed for this event.
+                </p>
+                <p className="text-gray-400 text-sm">
+                  Registration limit: {event.registrationCount || 0}/{event.registrationLimit}
+                </p>
               </div>
-              <div className="flex justify-end gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-gray-300 border-gray-300"
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" className="bg-orange-500 text-white">
-                  Register
-                </Button>
+            ) : (
+              <div className="space-y-4">
+                {registrationError && (
+                  <div className="bg-red-500 bg-opacity-10 border border-red-500 text-red-500 p-3 rounded-lg mb-4">
+                    {registrationError}
+                  </div>
+                )}
+                <div className="text-center py-4">
+                  <p className="text-white mb-4">
+                    Are you sure you want to register for this event?
+                  </p>
+                  <p className="text-gray-400 text-sm">
+                    You will be registered as: {userDetails.email}
+                  </p>
+                  {event.registrationLimit && (
+                    <p className="text-gray-400 text-sm mt-2">
+                      Spots remaining: {event.registrationLimit - (event.registrationCount || 0)}
+                    </p>
+                  )}
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <Button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    variant="outline"
+                    className="border-gray-600"
+                    disabled={isRegistering}
+                  >
+                    Cancel
+                  </Button>
+                  {!event.isRegistrationFull && (
+                    <Button 
+                      onClick={handleRegister} 
+                      className="bg-orange-600 hover:bg-orange-700"
+                      disabled={isRegistering}
+                    >
+                      {isRegistering ? 'Registering...' : 'Confirm Registration'}
+                    </Button>
+                  )}
+                </div>
               </div>
-            </form>
+            )}
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

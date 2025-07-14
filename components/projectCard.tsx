@@ -19,11 +19,19 @@ export default function ProjectCard({ project }: ProjectCardProps) {
   return (
     <div className="bg-black rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
       {/* Project Image */}
-      <img
-        src={project.image}
-        alt={project.title}
-        className="w-full h-48 object-cover"
-      />
+      <div className="w-full h-48 relative">
+        {project.image ? (
+          <img
+            src={project.image}
+            alt={project.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-700 flex items-center justify-center">
+            <span className="text-gray-400">No image available</span>
+          </div>
+        )}
+      </div>
       <div className="p-6">
         <h2 className="text-xl font-bold mb-2 text-orange-500">
           {project.title}

@@ -32,7 +32,7 @@ import axios from "axios";
 
 const formSchema = z
   .object({
-    fullName: z.string().min(2, "Name must be at least 2 characters"),
+    fullName: z.string().min(3, "Name must be at least 3 characters"),
     email: z.string().email("Invalid email address"),
     phone: z
       .string()
@@ -42,8 +42,8 @@ const formSchema = z
       .string()
       .min(8, "Password must be at least 8 characters")
       .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
-        "Password must contain at least one uppercase letter, one lowercase letter, and one number"
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])/,
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"
       ),
     confirmPassword: z.string(),
     terms: z.boolean().refine((val) => val === true, {
@@ -289,8 +289,8 @@ export default function SignUpPage() {
                         </FormControl>
                         <div className="text-xs text-gray-400 mt-1">
                           Please include at least 8 characters, 1 uppercase
-                          character, and 1 non-alphabetic symbol
-                          (., &, !, ?, etc).
+                          letter, 1 lowercase letter, 1 number, and 1 special
+                          character (@, $, !, %, *, ?, &, etc).
                         </div>
                         <FormMessage />
                       </FormItem>

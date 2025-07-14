@@ -43,7 +43,7 @@ export default function CreateMentorPage() {
       formDataToSend.append("name", formData.name);
       formDataToSend.append(
         "skills",
-        JSON.stringify(formData.skills.split(",").map((skill) => skill.trim())) // Convert skills to an array and stringify it
+        JSON.stringify(formData.skills.split(/[,\n]/).map((skill) => skill.trim()).filter(Boolean))
       );
       formDataToSend.append("industry", formData.industry);
       formDataToSend.append("experience", formData.experience);
@@ -147,17 +147,17 @@ export default function CreateMentorPage() {
               htmlFor="skills"
               className="block text-sm font-medium text-gray-400 mb-2"
             >
-              Skills (comma-separated)
+              Skills (one per line or comma-separated)
             </label>
-            <input
-              type="text"
-              id="skills"
+            <textarea
               name="skills"
               value={formData.skills}
               onChange={handleChange}
+              className="w-full p-3 bg-black border border-gray-700 text-white rounded-lg"
+              placeholder="Enter your skills (one per line or comma-separated)"
+              rows={4}
               required
-              className="w-full bg-transparent border border-white rounded-lg shadow-sm focus:ring-orange-500 focus:border-orange-500 p-[6px]"
-            />
+            ></textarea>
           </div>
 
           {/* Industry */}

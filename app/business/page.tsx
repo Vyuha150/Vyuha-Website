@@ -16,7 +16,13 @@ export default function BusinessPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {section.categories.map((cat, cidx) => (
-                <BusinessServiceCard key={cidx} title={cat.title} items={cat.items} links={cat.links} />
+                <BusinessServiceCard 
+                  key={cidx} 
+                  title={cat.title} 
+                  items={cat.items} 
+                  links={cat.links}
+                  actionButton={cat.actionButton}
+                />
               ))}
             </div>
           </section>

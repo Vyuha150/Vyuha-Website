@@ -1,30 +1,49 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import ProjectCard from "@/components/projectCard";
 import Filters from "@/components/ProjectFilters";
 import Link from "next/link";
+import axios from "axios";
+
+interface Project {
+  _id: string;
+  title: string;
+  description: string;
+  skills: string[];
+  difficulty: string;
+  teamSize: string;
+  deadline: string;
+  goals: string[];
+  deliverables: string[];
+  evaluationCriteria: string[];
+  image?: string;
+  githubUrl?: string;
+  demoUrl?: string;
+  status: string;
+  createdAt: string;
+}
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState([]); // State to store all projects
-  const [filteredProjects, setFilteredProjects] = useState([]); // State for filtered projects
-  const [isLoading, setIsLoading] = useState(true); // Loading state
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Fetch projects from the backend
+  // Fetch projects from backend
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL; // Backend API URL
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
         const response = await axios.get(`${apiUrl}/api/projects`);
-        setProjects(response.data);
-        setFilteredProjects(response.data);
-        setIsLoading(false);
+        const activeProjects = response.data.filter((project: Project) => project.status === 'active');
+        setProjects(activeProjects);
+        setFilteredProjects(activeProjects);
       } catch (err) {
-        console.error("Error fetching projects:", err);
-        setError("Failed to load projects. Please try again later.");
-        setIsLoading(false);
+        console.error('Error fetching projects:', err);
+        setError('Failed to load projects');
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -33,7 +52,7 @@ export default function ProjectsPage() {
 
   // Handle filter changes
   const handleFilterChange = (filters: { [key: string]: string }) => {
-    const filtered = projects.filter((project: any) => {
+    const filtered = projects.filter((project) => {
       const matchesDifficulty =
         !filters.difficulty ||
         project.difficulty.toLowerCase() === filters.difficulty.toLowerCase();
@@ -73,22 +92,23 @@ export default function ProjectsPage() {
         <Filters onFilterChange={handleFilterChange} />
       </div>
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="text-center text-gray-300">Loading projects...</div>
-      )}
-
-      {/* Error State */}
-      {error && <div className="text-center text-red-500">{error}</div>}
-
       {/* Project Listings */}
-      {!isLoading && !error && (
-        <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProjects.map((project: any) => (
-            <ProjectCard key={project._id} project={project} />
-          ))}
-        </div>
-      )}
+      <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {loading ? (
+          <div className="col-span-3 text-center text-gray-400">Loading projects...</div>
+        ) : error ? (
+          <div className="col-span-3 text-center text-red-500">{error}</div>
+        ) : filteredProjects.length === 0 ? (
+          <div className="col-span-3 text-center text-gray-400">No projects found.</div>
+        ) : (
+          filteredProjects.map((project) => (
+            <ProjectCard key={project._id} project={{
+              ...project,
+              image: project.image || '/placeholder-project.jpg'
+            }} />
+          ))
+        )}
+      </div>
     </main>
   );
 }

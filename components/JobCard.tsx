@@ -6,7 +6,7 @@ interface JobCardProps {
   job: {
     _id: any;
     title: string;
-    company: string;
+    company: string | { _id: string; name: string };
     location: string;
     jobType: string;
     description: string;
@@ -19,7 +19,7 @@ export default function JobCard({ job }: JobCardProps) {
       <div className="p-6">
         <h3 className="text-xl font-bold mb-2">{job.title}</h3>
         <p className="text-sm text-gray-400 mb-2">
-          <strong>Company:</strong> {job.company}
+          <strong>Company:</strong> {typeof job.company === 'string' ? job.company : job.company.name}
         </p>
         <p className="text-sm text-gray-400 mb-2">
           <strong>Location:</strong> {job.location}

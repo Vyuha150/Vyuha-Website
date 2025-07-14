@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -66,6 +66,37 @@ export default function OrganizationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [domainFilter, setDomainFilter] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
+  const [featuredOrgs, setFeaturedOrgs] = useState([]);
+  const [newlyJoined, setNewlyJoined] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchOrganizations = async () => {
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/organization/public`);
+        if (!response.ok) throw new Error('Failed to fetch organizations');
+        const data = await response.json();
+        
+        // Sort organizations by createdAt date
+        const sortedOrgs = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        // Featured orgs are organizations
+        const featured = sortedOrgs.filter(org => org.registerAs === 'organization').slice(0, 3);
+        // Newly joined are the most recent 2 registrations
+        const newJoined = sortedOrgs.slice(0, 2);
+        
+        setFeaturedOrgs(featured);
+        setNewlyJoined(newJoined);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrganizations();
+  }, []);
 
   function filterOrganizations(orgs: Organization[]): Organization[] {
     return orgs.filter((org) => {
@@ -81,95 +112,6 @@ export default function OrganizationsPage() {
       return matchesSearch && matchesDomain && matchesRegion;
     });
   }
-
-  const featuredOrgs = [
-    {
-      id: 1,
-      logo: "https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg",
-      name: "TechMinds Club",
-      domain: "Tech",
-      region: "Maharashtra", // Add region
-      description:
-        "Fostering innovation and technical excellence through workshops and hackathons.",
-      social: {
-        instagram: "techminds",
-        linkedin: "techminds-club",
-        youtube: "techminds",
-      },
-      eventsHosted: 25,
-      verified: true,
-    },
-    {
-      id: 2,
-      logo: "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg",
-      name: "Cultural Connect",
-      domain: "Cultural",
-      region: "Karnataka",
-      description:
-        "Celebrating diversity and promoting cultural exchange through events and performances.",
-      social: {
-        instagram: "culturalconnect",
-        linkedin: "cultural-connect",
-        youtube: "culturalconnect",
-      },
-      eventsHosted: 18,
-      verified: true,
-    },
-    {
-      id: 3,
-      logo: "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg",
-      name: "Social Impact Hub",
-      domain: "Social",
-      region: "Delhi",
-
-      description:
-        "Driving positive change through community service and social initiatives.",
-      social: {
-        instagram: "socialimpacthub",
-        linkedin: "social-impact-hub",
-        youtube: "socialimpacthub",
-      },
-      eventsHosted: 15,
-      verified: false,
-    },
-  ];
-
-  const newlyJoined = [
-    {
-      id: 4,
-      logo: "https://images.pexels.com/photos/3182812/pexels-photo-3182812.jpeg",
-      name: "Entrepreneurship Cell",
-      domain: "Entrepreneurship",
-      region: "Maharashtra",
-
-      description:
-        "Nurturing the next generation of business leaders and innovators.",
-      social: {
-        instagram: "ecell",
-        linkedin: "entrepreneurship-cell",
-        youtube: "ecell",
-      },
-      eventsHosted: 5,
-      verified: false,
-    },
-    {
-      id: 5,
-      logo: "https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg",
-      name: "Design Club",
-      domain: "Tech",
-      region: "Tamil Nadu",
-
-      description:
-        "Exploring creativity through UI/UX design and digital arts.",
-      social: {
-        instagram: "designclub",
-        linkedin: "design-club",
-        youtube: "designclub",
-      },
-      eventsHosted: 3,
-      verified: false,
-    },
-  ];
 
   const InviteForm = () => {
     const [success, setSuccess] = useState(false);

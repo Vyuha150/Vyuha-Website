@@ -125,8 +125,9 @@ export default function OrganizationPage() {
         {
           ...formData,
           skills: (formData.skills || "")
-            .split(",")
-            .map((s: string) => s.trim()),
+            .split(/[,\n]/)
+            .map((s: string) => s.trim())
+            .filter(Boolean),
         },
       ]);
     } else if (activeTab === "halls") {
@@ -135,8 +136,9 @@ export default function OrganizationPage() {
         {
           ...formData,
           facilities: (formData.facilities || "")
-            .split(",")
-            .map((f: string) => f.trim()),
+            .split(/[,\n]/)
+            .map((f: string) => f.trim())
+            .filter(Boolean),
         },
       ]);
     } else if (activeTab === "events") {
@@ -216,7 +218,7 @@ export default function OrganizationPage() {
                     />
                     <Input
                       name="skills"
-                      placeholder="Skills (comma separated)"
+                      placeholder="Skills (one per line or comma-separated)"
                       value={formData.skills || ""}
                       onChange={handleFormChange}
                       required
@@ -255,7 +257,7 @@ export default function OrganizationPage() {
                     />
                     <Input
                       name="facilities"
-                      placeholder="Facilities (comma separated)"
+                      placeholder="Facilities (one per line or comma-separated)"
                       value={formData.facilities || ""}
                       onChange={handleFormChange}
                       required

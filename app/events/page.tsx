@@ -32,12 +32,11 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import React from "react";
-import type { LucideIcon } from "lucide-react"; // Import the icon type separately
-import { id } from "date-fns/locale";
+import type { LucideIcon } from "lucide-react";
 import Cookies from "js-cookie";
 
 export type Event = {
-  id: number;
+  id: string;
   name: string;
   description: string;
   date: string;
@@ -46,16 +45,29 @@ export type Event = {
   organizer: string;
   organizerBio: string;
   organizerPhoto: string;
-  platformLink?: string; // For online events
-  fees?: string;
+  platformLink?: string;
+  fees: string;
   materials?: string;
   isRecorded?: boolean;
-  image: string; // Event image
-  category: string; // Event category
-  mode?: string; // Add mode property (e.g., "online" or "offline")
-  targetAudience?: string; // Add targetAudience property (e.g., "Students", "Professionals")
-  logo?: string; // Add logo property (if different from image)
-  icon?: LucideIcon; // Add icon property for event type icons
+  image: string;
+  category: string;
+  mode: "online" | "offline";
+  targetAudience: string;
+  logo: string;
+  icon?: LucideIcon;
+  isVccEvent?: boolean;
+  registrationLimit?: number | null;
+  registrationCount?: number;
+  isRegistrationFull?: boolean;
+  registrations?: Array<{
+    _id: string;
+    userId: {
+      _id: string;
+      username: string;
+      email: string;
+    };
+    registeredAt: string;
+  }>;
 };
 
 export default function EventsPage() {
@@ -67,44 +79,8 @@ export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    message: "",
-  });
-  const [timers, setTimers] = useState<{ [key: number]: string }>({});
-
-  const pastEvents = [
-    {
-      image:
-        "https://images.pexels.com/photos/2608517/pexels-photo-2608517.jpeg",
-      name: "Hackathon 2023",
-      stats: {
-        participants: "500+",
-        speakers: "12",
-        projects: "75",
-      },
-      testimonial: {
-        text: "An amazing experience that helped us grow technically and professionally.",
-        author: "Priya S., Team Lead",
-      },
-    },
-    {
-      image:
-        "https://images.pexels.com/photos/7014337/pexels-photo-7014337.jpeg",
-      name: "Social Impact Summit",
-      stats: {
-        participants: "300+",
-        speakers: "8",
-        initiatives: "25",
-      },
-      testimonial: {
-        text: "The perfect platform to connect with like-minded changemakers.",
-        author: "Rahul K., Organizer",
-      },
-    },
-  ];
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [timers, setTimers] = useState<{ [key: string]: string }>({});
 
   // Fetch events from the backend
   useEffect(() => {
@@ -113,7 +89,6 @@ export default function EventsPage() {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/api/events`
         );
-        console.log("Fetched events:", response.data);
         if (response.status === 200) {
           const formattedEvents = response.data.map((event: any) => ({
             ...event,
@@ -132,7 +107,7 @@ export default function EventsPage() {
   // Calculate timers for events
   useEffect(() => {
     const calculateTimers = () => {
-      const newTimers: { [key: number]: string } = {};
+      const newTimers: { [key: string]: string } = {};
       events.forEach((event) => {
         const eventDate = new Date(`${event.date} ${event.time}`);
         const now = new Date();
@@ -155,35 +130,49 @@ export default function EventsPage() {
     return () => clearInterval(timerInterval);
   }, [events]);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRegister = async () => {
+    setIsRegistering(true);
     try {
+      const token = Cookies.get('authToken');
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/events/register`,
         {
           eventId: selectedEvent?.id,
-          ...formData,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
         }
       );
       if (response.status === 200) {
         alert("Registration successful!");
         setIsModalOpen(false);
-        setFormData({ name: "", email: "", phone: "", message: "" });
+        setSelectedEvent(null);
+        
+        // Refresh events data to update registration counts
+        const refreshResponse = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/events`
+        );
+        if (refreshResponse.status === 200) {
+          const formattedEvents = refreshResponse.data.map((event: any) => ({
+            ...event,
+            id: event._id,
+          }));
+          setEvents(formattedEvents);
+        }
       }
     } catch (error: any) {
       if (error.response && error.response.status === 400) {
+        alert(error.response.data.message);
+      } else if (error.response && error.response.status === 403) {
         alert(error.response.data.message);
       } else {
         console.error("Error registering for event:", error);
         alert("An error occurred. Please try again.");
       }
+    } finally {
+      setIsRegistering(false);
     }
   };
 
@@ -191,17 +180,19 @@ export default function EventsPage() {
     const matchesSearch = event.name
       .toLowerCase()
       .includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter
-      ? event.category === categoryFilter
-      : true;
-    const matchesMode = modeFilter ? event.mode === modeFilter : true;
+    const matchesCategory = categoryFilter === "all" || !categoryFilter
+      ? true
+      : event.category === categoryFilter;
+    const matchesMode = modeFilter === "all" || !modeFilter
+      ? true
+      : event.mode === modeFilter;
     const matchesDate = date
       ? format(new Date(event.date), "yyyy-MM-dd") ===
         format(date, "yyyy-MM-dd")
       : true;
-    const matchesAudience = targetAudienceFilter
-      ? event.targetAudience === targetAudienceFilter
-      : true;
+    const matchesAudience = targetAudienceFilter === "all" || !targetAudienceFilter
+      ? true
+      : event.targetAudience === targetAudienceFilter;
 
     return (
       matchesSearch &&
@@ -213,91 +204,74 @@ export default function EventsPage() {
   });
 
   return (
-    <main className="min-h-screen">
+    <div className="min-h-screen bg-black text-white">
       {/* Hero Section */}
-      <section className="relative py-20 px-4 md:px-6 lg:px-8 ">
-        <div className="max-w-7xl mx-auto text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-6">
-              Discover Events | Create Impact
-            </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-              Whether you're looking to attend, volunteer, or host—Vyuha brings
-              together events that inspire leadership, innovation, and
-              collaboration.
-            </p>
-            <Button
-              size="lg"
-              className="gap-2 bg-orange-500 hover:bg-orange-600 hover:scale-105 duration-300"
-            >
-              <Upload className="w-4 h-4 " />
-              Upload Event Details
-            </Button>
-          </motion.div>
+      <section className="relative h-[60vh] flex items-center justify-center">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage:
+              "url('https://images.unsplash.com/photo-1540575467063-178a50c2df87?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170&q=80')",
+          }}
+        >
+          <div className="absolute inset-0 bg-black bg-opacity-60" />
+        </div>
+        <div className="relative z-10 text-center">
+          <h1 className="text-5xl font-bold mb-4">Upcoming Events</h1>
+          <p className="text-xl text-gray-300">
+            Join us for exciting events and workshops
+          </p>
         </div>
       </section>
 
-      {/* Search & Filters */}
-      <section className="py-12 px-4 md:px-6 lg:px-8">
+      {/* Filters Section */}
+      <section className="py-8 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Search events..."
-                className="pl-9"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 bg-transparent border-white/20"
               />
             </div>
-            <Select onValueChange={setCategoryFilter}>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Tech">Tech</SelectItem>
-                <SelectItem value="Cultural">Cultural</SelectItem>
-                <SelectItem value="Social">Social</SelectItem>
-                <SelectItem value="Leadership">Leadership</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="Workshop">Workshop</SelectItem>
+                <SelectItem value="Seminar">Seminar</SelectItem>
+                <SelectItem value="Competition">Competition</SelectItem>
+                <SelectItem value="Networking">Networking</SelectItem>
               </SelectContent>
             </Select>
-
-            <Select onValueChange={(value) => setTargetAudienceFilter(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Target Audience" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Students">Students</SelectItem>
-                <SelectItem value="Everyone">Everyone</SelectItem>
-                <SelectItem value="Professionals">Professionals</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select onValueChange={setModeFilter}>
+            <Select value={modeFilter} onValueChange={setModeFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="Mode" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">All Modes</SelectItem>
                 <SelectItem value="online">Online</SelectItem>
                 <SelectItem value="offline">Offline</SelectItem>
               </SelectContent>
             </Select>
-
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-left font-normal bg-transparent"
+                  className={`w-full justify-start text-left font-normal ${
+                    !date && "text-muted-foreground"
+                  }`}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {date ? format(date, "PPP") : <span>Pick a date</span>}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
                   selected={date}
@@ -310,265 +284,179 @@ export default function EventsPage() {
         </div>
       </section>
 
-      {/* Featured Events */}
-      <section className="py-20 px-4 md:px-6 lg:px-8">
+      {/* Events Grid */}
+      <section className="py-8 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8">Featured Events</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEvents.length === 0 ? (
-              <p className="text-muted-foreground text-center col-span-full">
-                No events found for selected filters.
-              </p>
-            ) : (
-              filteredEvents.map((event) => (
-                <motion.div
-                  key={event.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <Card className="overflow-hidden bg-black text-white hover:shadow-orange-500/50 transition-all duration-300 h-auto">
-                    <div className="aspect-video relative">
-                      <img
-                        src={`${process.env.NEXT_PUBLIC_API_URL}${event.logo}`}
-                        alt={event.name}
-                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute top-4 left-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm">
-                        {timers[event.id]}
-                      </div>
-                      <div className="absolute top-4 right-4 bg-black text-white px-3 py-1 rounded-full text-sm">
-                        {event.category}
-                      </div>
-                    </div>
-                    <CardHeader>
-                      <CardTitle className="text-xl font-bold">
-                        <div className="flex items-center gap-2">
-                          {event.icon &&
-                            React.createElement(event.icon, {
-                              className: "w-6 h-6 text-orange-500",
-                            })}
-                          <CardTitle className="text-xl font-bold">
-                            {event.name}
-                          </CardTitle>
-                        </div>{" "}
-                      </CardTitle>
-                      <div className="flex flex-col gap-2 text-sm text-gray-400">
-                        <div className="flex items-center gap-2">
-                          <CalendarIcon className="w-4 h-4" />
-                          <span>{format(new Date(event.date), "PPP")}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          <span>{event.time}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4" />
-                          <span>{event.location}</span>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-gray-400 mb-4">{event.description}</p>
-                      <div className="flex gap-4">
-                        <Button
-                          className="w-full bg-orange-500 hover:bg-orange-600 text-white transition-transform duration-300 hover:scale-105"
-                          onClick={() => {
-                            setSelectedEvent(event);
-                            setIsModalOpen(true);
-                          }}
-                        >
-                          Join Event
-                        </Button>
-                        <Button
-                          variant="outline"
-                          className="w-full text-orange-500 border-orange-500 hover:bg-orange-500 hover:text-white transition-transform duration-300 hover:scale-105"
-                          asChild
-                        >
-                          <Link href={`/events/${event.id}`}>Learn More</Link>
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* Host Your Event */}
-      <section className="py-20 px-4 md:px-6 lg:px-8">
-        <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-3xl font-bold mb-4">Host Your Event</h2>
-          <p className="text-xl text-muted-foreground mb-8">
-            Are you a student body with a vision? Let Vyuha amplify your reach
-            across India.
-          </p>
-          <Button
-            size="lg"
-            asChild
-            className="bg-orange-500 hover:bg-orange-600 hover:scale-105 duration-300"
-          >
-            <Link href="/events/create">Post Your Event Now</Link>
-          </Button>
-        </div>
-      </section>
-
-      {/* Past Event Highlights */}
-      <section className="py-20 px-4 md:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold mb-12">Past Event Highlights</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {pastEvents.map((event, index) => (
+            {filteredEvents.map((event) => (
               <motion.div
-                key={index}
+                key={event.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.3 }}
+                className="bg-gray-900 rounded-lg overflow-hidden border border-gray-800"
               >
-                <Card className="overflow-hidden bg-black text-white hover:shadow-orange-500/50 transition-all duration-300">
-                  <div className="aspect-video">
-                    <img
-                      src={event.image}
-                      alt={event.name}
-                      className="w-full h-full object-cover"
-                    />
+                <div className="relative h-48">
+                  <img
+                    src={event.image}
+                    alt={event.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute top-2 right-2">
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        event.mode === "online"
+                          ? "bg-blue-100 text-blue-800"
+                          : "bg-green-100 text-green-800"
+                      }`}
+                    >
+                      {event.mode}
+                    </span>
                   </div>
-                  <CardHeader>
-                    <CardTitle className="text-xl font-bold">
-                      {event.name}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-3 gap-4 mb-6">
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-orange-500">
-                          {event.stats.participants}
-                        </div>
-                        <div className="text-sm text-gray-400">
-                          Participants
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-orange-500">
-                          {event.stats.speakers}
-                        </div>
-                        <div className="text-sm text-gray-400">Speakers</div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-2xl font-bold text-orange-500">
-                          {event.stats.projects || event.stats.initiatives}
-                        </div>
-                        <div className="text-sm text-gray-400">
-                          {event.stats.projects ? "Projects" : "Initiatives"}
-                        </div>
-                      </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="text-xl font-semibold mb-2">{event.name}</h3>
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-2">
+                    {event.description}
+                  </p>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center text-gray-400">
+                      <CalendarIcon className="w-4 h-4 mr-2" />
+                      <span className="text-sm">
+                        {new Date(event.date).toLocaleDateString()}
+                      </span>
                     </div>
-                    <blockquote className="border-l-2 pl-4 italic text-gray-400">
-                      "{event.testimonial.text}"
-                      <footer className="mt-2 text-sm font-medium">
-                        — {event.testimonial.author}
-                      </footer>
-                    </blockquote>
-                  </CardContent>
-                </Card>
+                    <div className="flex items-center text-gray-400">
+                      <Clock className="w-4 h-4 mr-2" />
+                      <span className="text-sm">{event.time}</span>
+                    </div>
+                    <div className="flex items-center text-gray-400">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      <span className="text-sm">{event.location}</span>
+                    </div>
+                    <div className="flex items-center text-gray-400">
+                      <Users className="w-4 h-4 mr-2" />
+                      <span className="text-sm">{event.targetAudience}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-orange-500 font-semibold">
+                      {event.fees}
+                    </span>
+                    <div className="text-sm text-gray-400">
+                      {timers[event.id]}
+                    </div>
+                  </div>
+                  
+                  {/* Registration Status */}
+                  <div className="mt-2 text-sm">
+                    {event.registrationLimit ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400">
+                          Registrations: {event.registrationCount || 0}/{event.registrationLimit}
+                        </span>
+                        {event.isRegistrationFull && (
+                          <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs">
+                            Full
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-gray-400">
+                        Registrations: {event.registrationCount || 0} (Unlimited)
+                      </span>
+                    )}
+                  </div>
+                  <div className="mt-4 flex justify-between items-center">
+                    <Link
+                      href={`/events/${event.id}`}
+                      className="text-orange-500 hover:text-orange-600 text-sm"
+                    >
+                      Learn more
+                    </Link>
+                    <Button
+                      onClick={() => {
+                        setSelectedEvent(event);
+                        setIsModalOpen(true);
+                      }}
+                      className={`${
+                        event.isRegistrationFull 
+                          ? "bg-red-600 hover:bg-red-700 cursor-not-allowed" 
+                          : "bg-orange-600 hover:bg-orange-700"
+                      }`}
+                      disabled={event.isRegistrationFull}
+                    >
+                      {event.isRegistrationFull ? "Registrations Closed" : "Register Now"}
+                    </Button>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* Registration Modal */}
       {isModalOpen && selectedEvent && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
           <div className="bg-black text-white border border-orange-500 p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-2xl font-bold mb-4 text-white">
               Register for {selectedEvent.name}
             </h2>
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Name
-                </label>
-                <Input
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Your name"
-                  className="rounded-lg"
-                />
+            <div className="space-y-4">
+              <div className="text-center py-4">
+                {selectedEvent.isRegistrationFull ? (
+                  <div>
+                    <p className="text-red-400 mb-4">
+                      Sorry, registrations are closed for this event.
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      Registration limit: {selectedEvent.registrationCount || 0}/{selectedEvent.registrationLimit}
+                    </p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-white mb-4">
+                      Are you sure you want to register for this event?
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      Please make sure you're logged in to register.
+                    </p>
+                    {selectedEvent.registrationLimit && (
+                      <p className="text-gray-400 text-sm mt-2">
+                        Spots remaining: {selectedEvent.registrationLimit - (selectedEvent.registrationCount || 0)}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Email
-                </label>
-                <Input
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  placeholder="Your email"
-                  className="rounded-lg"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Phone
-                </label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  placeholder="Your phone number"
-                  className="rounded-lg"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="message"
-                  className="block text-sm font-medium text-gray-300 mb-2"
-                >
-                  Message (Optional)
-                </label>
-                <Textarea
-                  id="message"
-                  name="message"
-                  value={formData.message}
-                  onChange={handleInputChange}
-                  placeholder="Any additional message"
-                  rows={3}
-                  className="rounded-lg"
-                />
-              </div>
-              <div className="flex justify-end gap-4">
+              <div className="flex justify-end space-x-3">
                 <Button
                   type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    setSelectedEvent(null);
+                  }}
                   variant="outline"
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-gray-300 border-gray-300"
+                  className="border-gray-600"
+                  disabled={isRegistering}
                 >
-                  Cancel
+                  {selectedEvent.isRegistrationFull ? 'Close' : 'Cancel'}
                 </Button>
-                <Button type="submit" className="bg-orange-500 text-white">
-                  Register
-                </Button>
+                {!selectedEvent.isRegistrationFull && (
+                  <Button 
+                    onClick={handleRegister} 
+                    className="bg-orange-600 hover:bg-orange-700"
+                    disabled={isRegistering}
+                  >
+                    {isRegistering ? 'Registering...' : 'Confirm Registration'}
+                  </Button>
+                )}
               </div>
-            </form>
+            </div>
           </div>
         </div>
       )}
-    </main>
+    </div>
   );
 }

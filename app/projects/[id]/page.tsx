@@ -55,11 +55,17 @@ export default function ProjectDetailsPage() {
     <main className="max-w-7xl mx-auto px-6 py-6 bg-black mt-12 rounded-lg text-white">
       {/* Project Banner */}
       <div className="relative mb-12 border border-gray-400 rounded-lg">
-        <img
-          src={`${process.env.NEXT_PUBLIC_API_URL}${project.image}`}
-          alt={project.title}
-          className="w-full h-80 object-cover rounded-lg shadow-lg"
-        />
+        {project.image ? (
+          <img
+            src={project.image}
+            alt={project.title}
+            className="w-full h-80 object-cover rounded-lg shadow-lg"
+          />
+        ) : (
+          <div className="w-full h-80 bg-gray-700 flex items-center justify-center rounded-lg">
+            <span className="text-gray-400 text-xl">No image available</span>
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent rounded-lg"></div>
         <h1 className="absolute bottom-4 left-4 text-4xl font-bold text-orange-500 drop-shadow-lg">
           {project.title}

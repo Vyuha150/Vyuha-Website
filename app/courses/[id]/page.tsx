@@ -84,6 +84,21 @@ export default function CourseDetailsPage() {
           </div>
         </div>
 
+        {/* Course Image */}
+        {course.coursePhoto && (
+          <div className="mb-8">
+            <img
+              src={course.coursePhoto}
+              alt={course.title}
+              className="w-full h-64 object-cover rounded-lg"
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                img.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
+
         {/* Course Description */}
         <section className="mb-8">
           <h3 className="text-2xl font-semibold text-orange-500 mb-4">
@@ -149,7 +164,7 @@ export default function CourseDetailsPage() {
         <section className="flex flex-col md:flex-row items-center justify-between bg-black shadow-lg p-6 rounded-lg">
           <div className="mb-4 md:mb-0">
             <h3 className="text-2xl font-semibold text-orange-500">
-              Price: {course.price}
+              Price: ₹{course.price}
             </h3>
           </div>
           <div className="flex flex-col md:flex-row gap-4">

@@ -59,8 +59,8 @@ export default function AddJobPage() {
       );
       if (formData.image) data.append("image", formData.image);
 
-      // Send POST request to the backend
-      const response = await axios.post(`${apiUrl}/api/job-application`, data, {
+      // Send POST request to the backend  
+      const response = await axios.post(`${apiUrl}/api/jobs`, data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
