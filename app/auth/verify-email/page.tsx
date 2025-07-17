@@ -4,7 +4,6 @@ import React, { useEffect, useState, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { jwtDecode } from "jwt-decode";
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
@@ -23,17 +22,10 @@ export default function VerifyEmailPage() {
       return;
     }
 
-    try {
-      // Decode the JWT token to extract email
-      const decoded: any = jwtDecode(tokenParam);
-      setEmail(decoded.email || "Unknown");
-      setToken(tokenParam);
-      setStatus("ready");
-    } catch (error) {
-      console.error("Error decoding token:", error);
-      setStatus("error");
-      setMessage("Invalid verification token format.");
-    }
+    // Token is a random hex string, not a JWT - so we can't decode it
+    // We'll proceed with verification and get user info from the API response
+    setToken(tokenParam);
+    setStatus("ready");
   }, [searchParams]);
 
   const handleVerifyEmail = async () => {
@@ -97,8 +89,8 @@ export default function VerifyEmailPage() {
               </svg>
             </div>
             <div className="space-y-2">
-              <p className="text-white font-semibold">Verify email address:</p>
-              <p className="text-orange-400 text-lg font-mono">{email}</p>
+              <p className="text-white font-semibold">Ready to verify your email address</p>
+              <p className="text-gray-400 text-sm">Click the button below to complete verification</p>
             </div>
             <button
               onClick={handleVerifyEmail}
