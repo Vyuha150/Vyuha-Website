@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function EnhanceClubPage() {
   const [formData, setFormData] = useState({
@@ -27,7 +28,7 @@ export default function EnhanceClubPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // You can integrate your API here
-    alert(`Your request has been submitted! Club ID: ${formData.clubId}`);
+    toast.success(`Your request has been submitted! Club ID: ${formData.clubId}`);
     setFormData({
       clubId: "",
       clubName: "",

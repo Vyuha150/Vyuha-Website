@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import axios from "axios";
 import MentorCard from "@/components/MentorCard";
 import MentorFilters from "@/components/MentorFilters";
@@ -77,17 +78,17 @@ export default function MentorshipPage() {
       );
 
       if (response.status === 201) {
-        alert(`Session booked with ${selectedMentor?.name}!`);
+        toast.success(`Session booked with ${selectedMentor?.name}!`);
         closeBookingModal();
       } else {
-        alert("Failed to book session. Please try again.");
+        toast.error("Failed to book session. Please try again.");
       }
     } catch (error: any) {
       if (error.response.status === 409) {
-        alert(error.response.data.message);
+        toast.error(error.response.data.message);
       } else {
         console.error("Error booking session:", error);
-        alert("An error occurred while booking the session.");
+        toast.error("An error occurred while booking the session.");
       }
     }
   };

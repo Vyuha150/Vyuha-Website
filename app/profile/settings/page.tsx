@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
@@ -54,7 +55,7 @@ export default function ChangePasswordPage() {
 
     // Validate that newPassword and confirmPassword match
     if (values.newPassword !== values.confirmPassword) {
-      alert("New password and confirm password do not match!");
+      toast.success("New password and confirm password do not match!");
       setIsSubmitting(false);
       return;
     }
@@ -74,14 +75,14 @@ export default function ChangePasswordPage() {
       });
 
       if (response.status === 200) {
-        alert("Password updated successfully!");
+        toast.success("Password updated successfully!");
         form.reset(); // Reset the form after successful submission
       } else {
         throw new Error("Failed to update password");
       }
     } catch (error) {
       console.error("Error updating password:", error);
-      alert("An error occurred while updating your password.");
+      toast.error("An error occurred while updating your password.");
     } finally {
       setIsSubmitting(false);
     }

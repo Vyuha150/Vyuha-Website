@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function NotificationsPage() {
   const [preferences, setPreferences] = useState({
@@ -16,7 +17,7 @@ export default function NotificationsPage() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     // Handle form submission logic (e.g., API call)
-    alert("Notification preferences updated successfully!");
+    toast.success("Notification preferences updated successfully!");
   };
 
   return (

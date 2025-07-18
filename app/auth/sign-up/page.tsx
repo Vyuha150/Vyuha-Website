@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation"; // Import useRouter
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 import {
   Form,
   FormControl,
@@ -29,6 +30,12 @@ import {
   ArrowRight,
 } from "lucide-react";
 import axios from "axios";
+import { stateNames } from "@/data/statesData";
+import { districtNames } from "@/data/districtsData";
+import { countryNames } from "@/data/coutriesData";
+
+
+const genderOptions = ["Male", "Female", "Other"];
 
 const formSchema = z
   .object({
@@ -49,43 +56,113 @@ const formSchema = z
     terms: z.boolean().refine((val) => val === true, {
       message: "You must accept the terms and conditions",
     }),
+    isStudent: z.boolean(),
+    // Student fields (optional if not student)
+    college: z.string().optional(),
+    otherCollege: z.string().optional(),
+    gender: z.enum(["Male", "Female", "Other"]).optional(),
+    country: z.string().optional(),
+    state: z.string().optional(),
+    district: z.string().optional(),
+    addressLine: z.string().optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
     path: ["confirmPassword"],
+  })
+  .refine((data) => {
+    if (data.isStudent) {
+      return !!data.college && !!data.gender && !!data.country && !!data.addressLine && (data.country !== "India" || (!!data.state && !!data.district));
+    }
+    return true;
+  }, {
+    message: "All student fields are required",
+    path: ["college"],
   });
 
 export default function SignUpPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // State for toggling password visibility
   const [showConfirmPassword, setShowConfirmPassword] = useState(false); // State for toggling confirm password visibility
+  const [colleges, setColleges] = useState([]);
+  const [selectedState, setSelectedState] = useState("");
+  const [districts, setDistricts] = useState<string[]>([]);
+  const [showOtherCollege, setShowOtherCollege] = useState(false);
+  const [isStudent, setIsStudent] = useState(false);
   const router = useRouter(); // Initialize useRouter for navigation
+
+  useEffect(() => {
+    // Fetch colleges from backend
+    const fetchColleges = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+        const res = await axios.get(`${apiUrl}/api/colleges`);
+        setColleges(res.data);
+      } catch (err) {
+        setColleges([]);
+      }
+    };
+    fetchColleges();
+  }, []);
+
+  useEffect(() => {
+    if (selectedState && districtNames[selectedState as keyof typeof districtNames]) {
+      setDistricts(districtNames[selectedState as keyof typeof districtNames]);
+    } else {
+      setDistricts([]);
+    }
+  }, [selectedState]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       fullName: "",
       email: "",
-      phone: "", // Add this line
+      phone: "",
       password: "",
       confirmPassword: "",
       terms: false,
+      isStudent: false,
+      college: "",
+      otherCollege: "",
+      gender: "Other",
+      country: "India",
+      state: "",
+      district: "",
+      addressLine: "",
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      // Use the API URL from the environment variable
       const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-      // Make API call to the signup endpoint
-      const response = await axios.post(`${apiUrl}/api/auth/signup`, {
+      let payload: any = {
         username: values.fullName,
         email: values.email,
-        phone: values.phone, // Add this line
+        phone: values.phone,
         password: values.password,
-      });
+      };
+      if (values.isStudent) {
+        let collegeValue = values.college || "";
+        if (collegeValue === "Other") {
+          collegeValue = values.otherCollege || "";
+        }
+        let address = values.addressLine;
+        if (values.country === "India") {
+          address = `${values.addressLine}, ${values.district}, ${values.state}, India`;
+        }
+        payload = {
+          ...payload,
+          gender: values.gender,
+          college: collegeValue,
+          address,
+          country: values.country,
+          state: values.state,
+          district: values.district,
+        };
+      }
+      const response = await axios.post(`${apiUrl}/api/auth/signup`, payload);
 
       if (response.status === 201) {
         const { token, user } = response.data;
@@ -93,7 +170,7 @@ export default function SignUpPage() {
         // Store the token in sessionStorage or localStorage
         sessionStorage.setItem("authToken", token);
 
-        alert(
+        toast.success(
           "Account created successfully! Redirecting to the sign-in page..."
         );
         router.push("/auth/sign-in"); // Navigate to the sign-in page
@@ -103,11 +180,11 @@ export default function SignUpPage() {
 
       // Handle specific error messages from the API
       if (axios.isAxiosError(error) && error.response) {
-        alert(
+          toast.error(
           error.response.data.message || "An error occurred. Please try again."
         );
       } else {
-        alert("An error occurred. Please try again later.");
+        toast.error("An error occurred. Please try again later.");
       }
     } finally {
       setIsSubmitting(false);
@@ -361,6 +438,188 @@ export default function SignUpPage() {
                       </FormItem>
                     )}
                   />
+
+                  {/* Are you a student? */}
+                  <div className="flex items-center gap-4">
+                    <label className="text-white font-medium">Are you a student?</label>
+                    <input
+                      type="radio"
+                      id="student-yes"
+                      checked={form.watch("isStudent")}
+                      onChange={() => { form.setValue("isStudent", true); setIsStudent(true); }}
+                    />
+                    <label htmlFor="student-yes" className="text-white">Yes</label>
+                    <input
+                      type="radio"
+                      id="student-no"
+                      checked={!form.watch("isStudent")}
+                      onChange={() => { form.setValue("isStudent", false); setIsStudent(false); }}
+                    />
+                    <label htmlFor="student-no" className="text-white">No</label>
+                  </div>
+                  {/* Student fields */}
+                  {form.watch("isStudent") && (
+                    <>
+                      {/* College Field */}
+                      <FormField
+                        control={form.control}
+                        name="college"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>College</FormLabel>
+                            <FormControl>
+                              <select
+                                className="w-full p-2 rounded bg-black/70 text-white border border-white/20"
+                                {...field}
+                                onChange={e => {
+                                  field.onChange(e);
+                                  setShowOtherCollege(e.target.value === "Other");
+                                }}
+                              >
+                                <option value="">Select your college</option>
+                                {colleges.map((c: any) => (
+                                  <option key={c._id} value={c._id}>{c.name}</option>
+                                ))}
+                                <option value="Other">Other College</option>
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {/* Other College Field */}
+                      {showOtherCollege && (
+                        <FormField
+                          control={form.control}
+                          name="otherCollege"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Enter College Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Enter your college name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      )}
+                      {/* Gender Field */}
+                      <FormField
+                        control={form.control}
+                        name="gender"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Gender</FormLabel>
+                            <FormControl>
+                              <select
+                                className="w-full p-2 rounded bg-black/70 text-white border border-white/20"
+                                {...field}
+                              >
+                                {genderOptions.map(g => (
+                                  <option key={g} value={g}>{g}</option>
+                                ))}
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {/* Country Field */}
+                      <FormField
+                        control={form.control}
+                        name="country"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Country</FormLabel>
+                            <FormControl>
+                              <select
+                                className="w-full p-2 rounded bg-black/70 text-white border border-white/20"
+                                {...field}
+                                onChange={e => {
+                                  field.onChange(e);
+                                  if (e.target.value !== "India") {
+                                    setSelectedState("");
+                                    setDistricts([]);
+                                  }
+                                }}
+                              >
+                                <option value="">Select country</option>
+                                {countryNames.map((c: string) => (
+                                  <option key={c} value={c}>{c}</option>
+                                ))}
+                              </select>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      {/* State and District Fields (India only) */}
+                      {form.watch("country") === "India" && (
+                        <>
+                          <FormField
+                            control={form.control}
+                            name="state"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>State</FormLabel>
+                                <FormControl>
+                                  <select
+                                    className="w-full p-2 rounded bg-black/70 text-white border border-white/20"
+                                    {...field}
+                                    onChange={e => {
+                                      field.onChange(e);
+                                      setSelectedState(e.target.value);
+                                    }}
+                                  >
+                                    <option value="">Select state</option>
+                                    {stateNames.map(s => (
+                                      <option key={s} value={s}>{s}</option>
+                                    ))}
+                                  </select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="district"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>District</FormLabel>
+                                <FormControl>
+                                  <select
+                                    className="w-full p-2 rounded bg-black/70 text-white border border-white/20"
+                                    {...field}
+                                  >
+                                    <option value="">Select district</option>
+                                    {districts.map(d => (
+                                      <option key={d} value={d}>{d}</option>
+                                    ))}
+                                  </select>
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </>
+                      )}
+                      {/* Address Line Field */}
+                      <FormField
+                        control={form.control}
+                        name="addressLine"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Address</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Address line (street, area, etc.)" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </>
+                  )}
 
                   {/* Submit Button */}
                   <Button

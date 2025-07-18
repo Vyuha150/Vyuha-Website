@@ -7,6 +7,7 @@ import {
   CalendarIcon,
   DocumentIcon,
   UsersIcon,
+  NewspaperIcon
 } from '@heroicons/react/24/outline';
 
 interface DashboardConfig {
@@ -52,6 +53,11 @@ const dashboardConfigs: DashboardConfigs = {
         icon: CalendarIcon,
       },
       {
+        label: 'Achievements',
+        href: '/dashboard/admin/achievements',
+        icon: NewspaperIcon,
+      },
+      {
         label: 'Podcasts',
         href: '/dashboard/admin/podcasts',
         icon: DocumentIcon,
@@ -83,12 +89,12 @@ const dashboardConfigs: DashboardConfigs = {
     sidebarItems: [
       {
         label: 'Overview',
-        href: '/dashboard/event-lead/overview',
+        href: '/dashboard/event_lead/',
         icon: HomeIcon,
       },
       {
         label: 'Events',
-        href: '/dashboard/event-lead/events',
+        href: '/dashboard/event_lead/events',
         icon: CalendarIcon,
       },
     ],

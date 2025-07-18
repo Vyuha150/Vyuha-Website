@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 import {
   Form,
   FormControl,
@@ -57,21 +58,21 @@ export default function SignInPage() {
         Cookies.set("userId", userId, { path: "/", expires: 1 });
         Cookies.set("role", role, { path: "/", expires: 1 });
 
-        alert("Sign-in successful! Redirecting to the home page...");
+        toast.success("Sign-in successful! Redirecting to the home page...");
         router.push("/");
       } else {
-        alert("Invalid email or password. Please try again.");
+        toast.error("Invalid email or password. Please try again.");
       }
     } catch (error) {
       console.error("Error during sign-in:", error);
 
       // Handle specific error messages from the API
       if (axios.isAxiosError(error) && error.response) {
-        alert(
+        toast.error(
           error.response.data.message || "An error occurred. Please try again."
         );
       } else {
-        alert("An error occurred. Please try again later.");
+        toast.error("An error occurred. Please try again later.");
       }
     } finally {
       setIsSubmitting(false);

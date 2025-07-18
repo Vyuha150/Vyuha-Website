@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import axios from "axios";
 import { useParams } from "next/navigation";
 
@@ -107,7 +108,7 @@ export default function JobDetailsPage() {
       );
 
       if (response.status === 201) {
-        alert("Application submitted successfully!");
+        toast.success("Application submitted successfully!");
         setFormData({
           name: "",
           email: "",
@@ -116,7 +117,7 @@ export default function JobDetailsPage() {
         });
         setIsModalOpen(false); // Close the modal after successful submission
       } else {
-        alert("Failed to submit application. Please try again.");
+        toast.error("Failed to submit application. Please try again.");
       }
     } catch (error) {
       console.error("Error submitting application:", error);

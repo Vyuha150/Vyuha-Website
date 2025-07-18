@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import toast from "react-hot-toast";
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -215,8 +216,6 @@ export default function ProjectsPage() {
   };
 
   const handleDelete = async (projectId: string) => {
-    if (!window.confirm('Are you sure you want to delete this project?')) return;
-    
     try {
       const token = Cookies.get('authToken');
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;

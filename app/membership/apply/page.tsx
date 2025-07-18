@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
+import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -213,10 +214,10 @@ function MembershipApplicationContent() {
                   signature: paymentResponse.razorpay_signature,
                 }
               );
-              alert(verifyResponse.data.message);
+              toast.success(verifyResponse.data.message);
               router.push("/membership");
             } catch (err) {
-              alert("Payment verification failed. Please try again.");
+              toast.error("Payment verification failed. Please try again.");
             }
           },
           prefill: {
@@ -229,13 +230,12 @@ function MembershipApplicationContent() {
         const razorpay = new Razorpay(options);
         razorpay.open();
       } else {
-        alert(response.data.message);
+        toast.success(response.data.message);
         router.push("/membership");
       }
     } catch (error: any) {
       console.error("Error submitting form:", error);
-      alert(
-        error.response?.data?.message ||
+      toast.error(error.response?.data?.message ||
           "Error submitting form. Please try again."
       );
     } finally {

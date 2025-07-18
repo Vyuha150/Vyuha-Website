@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import IconicLoader from "@/components/IconicLoader";
+import { Toaster } from "react-hot-toast";
 
 export default function Layout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -58,6 +59,39 @@ export default function Layout({ children }: { children: ReactNode }) {
             </footer>
           )}
         </div>
+        
+        {/* React Hot Toast */}
+        <Toaster
+          position="top-right"
+          reverseOrder={false}
+          gutter={8}
+          containerClassName=""
+          containerStyle={{}}
+          toastOptions={{
+            // Define default options
+            className: '',
+            duration: 4000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+            // Default options for specific types
+            success: {
+              duration: 3000,
+              theme: {
+                primary: 'green',
+                secondary: 'black',
+              },
+            },
+            error: {
+              duration: 4000,
+              theme: {
+                primary: 'red',
+                secondary: 'black',
+              },
+            },
+          }}
+        />
       </body>
     </html>
   );

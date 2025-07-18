@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import toast from "react-hot-toast";
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import SmallLoader from '@/components/SmallLoader';
 import Cookies from 'js-cookie';
@@ -183,8 +184,6 @@ export default function JobsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this job?')) return;
-    
     try {
       const token = Cookies.get('authToken');
       const response = await fetch(`${BACKEND_URL}/api/jobs/${id}`, { 
@@ -276,8 +275,6 @@ export default function JobsPage() {
   };
 
   const deleteApplication = async (applicationId: string) => {
-    if (!confirm('Are you sure you want to delete this application?')) return;
-
     try {
       const token = Cookies.get('authToken');
       const response = await fetch(`${BACKEND_URL}/api/job-applicants/${applicationId}`, {

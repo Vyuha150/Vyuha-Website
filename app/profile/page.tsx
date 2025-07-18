@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -146,14 +147,14 @@ export default function ProfilePage() {
       });
 
       if (response.status === 200) {
-        alert("Profile updated successfully!");
+        toast.success("Profile updated successfully!");
         setIsEditing(false);
       } else {
         throw new Error("Failed to update profile");
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert("An error occurred while updating your profile.");
+      toast.error("An error occurred while updating your profile.");
     } finally {
       setIsSubmitting(false);
     }

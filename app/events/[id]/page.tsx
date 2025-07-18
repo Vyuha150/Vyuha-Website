@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -149,7 +150,7 @@ export default function EventDetailsPage() {
       );
 
       if (response.status === 200) {
-        alert("Registration successful!");
+        toast.success("Registration successful!");
         setIsModalOpen(false);
         // Refresh event data to show updated registration count
         const refreshResponse = await axios.get(
@@ -397,9 +398,9 @@ export default function EventDetailsPage() {
                   Become a VCC Member
                 </Link>
               </div>
-            ) : !['user', 'vcc_member'].includes(userDetails.role) ? (
+            ) : !['student', 'vcc_member'].includes(userDetails.role) ? (
               <div className="text-center py-4">
-                <p className="text-red-500">Only users and VCC members can register for events.</p>
+                <p className="text-red-500">Only students and VCC members can register for events.</p>
               </div>
             ) : event.isRegistrationFull ? (
               <div className="text-center py-4">
@@ -435,7 +436,7 @@ export default function EventDetailsPage() {
                     type="button"
                     onClick={() => setIsModalOpen(false)}
                     variant="outline"
-                    className="border-gray-600"
+                    className="border-gray-600 text-black"
                     disabled={isRegistering}
                   >
                     Cancel

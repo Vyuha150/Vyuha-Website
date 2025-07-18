@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
+import toast from "react-hot-toast";
 import {
   Select,
   SelectContent,
@@ -34,6 +35,7 @@ import Link from "next/link";
 import React from "react";
 import type { LucideIcon } from "lucide-react";
 import Cookies from "js-cookie";
+import { getUserRole } from "@/utils/auth";
 
 export type Event = {
   id: string;
@@ -86,9 +88,22 @@ export default function EventsPage() {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/events`
-        );
+        const userRole = getUserRole();
+        const token = Cookies.get('authToken');
+        let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/events`;
+        
+        // If user is a student or vcc_member, use the student endpoint
+        if (userRole === 'student' || userRole === 'vcc_member') {
+          endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/events/student`;
+        }
+        
+        const headers: any = {};
+        if (token && (userRole === 'student' || userRole === 'vcc_member')) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+        
+        const response = await axios.get(endpoint, { headers });
+        
         if (response.status === 200) {
           const formattedEvents = response.data.map((event: any) => ({
             ...event,
@@ -146,14 +161,26 @@ export default function EventsPage() {
         }
       );
       if (response.status === 200) {
-        alert("Registration successful!");
+        toast.success("Registration successful!");
         setIsModalOpen(false);
         setSelectedEvent(null);
         
         // Refresh events data to update registration counts
-        const refreshResponse = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/events`
-        );
+        const userRole = getUserRole();
+        const token = Cookies.get('authToken');
+        let refreshEndpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/events`;
+        
+        if (userRole === 'student' || userRole === 'vcc_member') {
+          refreshEndpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/events/student`;
+        }
+        
+        const refreshHeaders: any = {};
+        if (token && (userRole === 'student' || userRole === 'vcc_member')) {
+          refreshHeaders.Authorization = `Bearer ${token}`;
+        }
+        
+        const refreshResponse = await axios.get(refreshEndpoint, { headers: refreshHeaders });
+        
         if (refreshResponse.status === 200) {
           const formattedEvents = refreshResponse.data.map((event: any) => ({
             ...event,
@@ -164,12 +191,12 @@ export default function EventsPage() {
       }
     } catch (error: any) {
       if (error.response && error.response.status === 400) {
-        alert(error.response.data.message);
+        toast.error(error.response.data.message);
       } else if (error.response && error.response.status === 403) {
-        alert(error.response.data.message);
+        toast.error(error.response.data.message);
       } else {
         console.error("Error registering for event:", error);
-        alert("An error occurred. Please try again.");
+        toast.error("An error occurred. Please try again.");
       }
     } finally {
       setIsRegistering(false);
@@ -374,20 +401,12 @@ export default function EventsPage() {
                     >
                       Learn more
                     </Link>
-                    <Button
-                      onClick={() => {
-                        setSelectedEvent(event);
-                        setIsModalOpen(true);
-                      }}
-                      className={`${
-                        event.isRegistrationFull 
-                          ? "bg-red-600 hover:bg-red-700 cursor-not-allowed" 
-                          : "bg-orange-600 hover:bg-orange-700"
-                      }`}
-                      disabled={event.isRegistrationFull}
+                    <Link
+                      href={`/events/${event.id}`}
+                      className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-sm font-semibold"
                     >
-                      {event.isRegistrationFull ? "Registrations Closed" : "Register Now"}
-                    </Button>
+                      View Details
+                    </Link>
                   </div>
                 </div>
               </motion.div>
@@ -397,66 +416,7 @@ export default function EventsPage() {
       </section>
 
       {/* Registration Modal */}
-      {isModalOpen && selectedEvent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000]">
-          <div className="bg-black text-white border border-orange-500 p-6 rounded-lg shadow-lg w-full max-w-md">
-            <h2 className="text-2xl font-bold mb-4 text-white">
-              Register for {selectedEvent.name}
-            </h2>
-            <div className="space-y-4">
-              <div className="text-center py-4">
-                {selectedEvent.isRegistrationFull ? (
-                  <div>
-                    <p className="text-red-400 mb-4">
-                      Sorry, registrations are closed for this event.
-                    </p>
-                    <p className="text-gray-400 text-sm">
-                      Registration limit: {selectedEvent.registrationCount || 0}/{selectedEvent.registrationLimit}
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <p className="text-white mb-4">
-                      Are you sure you want to register for this event?
-                    </p>
-                    <p className="text-gray-400 text-sm">
-                      Please make sure you're logged in to register.
-                    </p>
-                    {selectedEvent.registrationLimit && (
-                      <p className="text-gray-400 text-sm mt-2">
-                        Spots remaining: {selectedEvent.registrationLimit - (selectedEvent.registrationCount || 0)}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex justify-end space-x-3">
-                <Button
-                  type="button"
-                  onClick={() => {
-                    setIsModalOpen(false);
-                    setSelectedEvent(null);
-                  }}
-                  variant="outline"
-                  className="border-gray-600"
-                  disabled={isRegistering}
-                >
-                  {selectedEvent.isRegistrationFull ? 'Close' : 'Cancel'}
-                </Button>
-                {!selectedEvent.isRegistrationFull && (
-                  <Button 
-                    onClick={handleRegister} 
-                    className="bg-orange-600 hover:bg-orange-700"
-                    disabled={isRegistering}
-                  >
-                    {isRegistering ? 'Registering...' : 'Confirm Registration'}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* The registration modal and related logic are removed, as registration is now handled on the event details page. */}
     </div>
   );
 }

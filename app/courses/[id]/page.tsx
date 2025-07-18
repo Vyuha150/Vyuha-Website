@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { useParams } from "next/navigation";
 import axios from "axios";
 
@@ -40,9 +41,7 @@ export default function CourseDetailsPage() {
   // No enroll API, just close modal and show alert
   const handleEnroll = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(
-      "Enrollment is handled externally. Please use the enroll link below."
-    );
+    toast.success("Enrollment is handled externally. Please use the enroll link below.");
     setIsModalOpen(false);
     setFormData({ name: "", email: "", phone: "" });
   };

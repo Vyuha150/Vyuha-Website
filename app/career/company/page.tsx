@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -89,10 +90,10 @@ export default function AddCompanyPage() {
       });
 
       if (response.status === 201) {
-        alert("Company added successfully!");
+        toast.success("Company added successfully!");
         router.push("/career"); // Redirect to the companies page
       } else {
-        alert("Failed to add company. Please try again.");
+        toast.error("Failed to add company. Please try again.");
       }
     } catch (error: any) {
       console.error("Error adding company:", error);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -99,12 +100,11 @@ export default function JoinPage() {
       );
 
       if (response.status === 201) {
-        alert("Registration submitted successfully!");
+        toast.success("Registration submitted successfully!");
         form.reset();
       }
     } catch (error: any) {
-      alert(
-        error.response?.data?.message ||
+      toast.error(error.response?.data?.message ||
           "Error submitting form. Please try again."
       );
     } finally {

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, FormEvent, useRef, useState } from "react";
+import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { motion, useInView } from "framer-motion";
 import axios from "axios";
@@ -84,12 +85,11 @@ export default function ClubPartnerForms() {
       );
 
       if (response.status === 201) {
-        alert("Form submitted successfully!");
+        toast.success("Form submitted successfully!");
       }
     } catch (error: any) {
       console.error("Error submitting form:", error);
-      alert(
-        error.response?.data?.message || "An error occurred. Please try again."
+      toast.error(error.response?.data?.message || "An error occurred. Please try again."
       );
     }
   };
@@ -229,9 +229,7 @@ export default function ClubPartnerForms() {
                     !formData.phone ||
                     !formData.skills
                   ) {
-                    alert(
-                      "All fields are required. Please fill out all fields."
-                    );
+                    toast.success("All fields are required. Please fill out all fields.");
                     return; // Stop form submission
                   }
 
@@ -367,9 +365,7 @@ export default function ClubPartnerForms() {
                     !formData.phone ||
                     !formData.vision
                   ) {
-                    alert(
-                      "All fields are required. Please fill out all fields."
-                    );
+                    toast.success("All fields are required. Please fill out all fields.");
                     return;
                   }
 
@@ -492,9 +488,7 @@ export default function ClubPartnerForms() {
                     !formData.collegeName ||
                     !formData.note
                   ) {
-                    alert(
-                      "All fields are required. Please fill out all fields."
-                    );
+                    toast.success("All fields are required. Please fill out all fields.");
                     return;
                   }
 

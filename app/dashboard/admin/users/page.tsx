@@ -11,13 +11,21 @@ interface User {
   username: string;
   email: string;
   role: string;
+  college?: string;
   isVerified: boolean;
   createdAt: string;
 }
 
+interface College {
+  _id: string;
+  name: string;
+}
+
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [colleges, setColleges] = useState<College[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingColleges, setLoadingColleges] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -25,12 +33,14 @@ export default function UsersPage() {
     username: string;
     email: string;
     role: string;
+    college: string;
     isVerified: boolean;
     password: string;
   }>({
     username: '',
     email: '',
     role: 'user',
+    college: '',
     isVerified: true,
     password: ''
   });
@@ -55,8 +65,32 @@ export default function UsersPage() {
     }
   };
 
+  const fetchColleges = async () => {
+    setLoadingColleges(true);
+    try {
+      const token = Cookies.get('authToken');
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      const response = await axios.get(`${baseUrl}/api/colleges`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setColleges(response.data);
+    } catch (err) {
+      console.error('Error fetching colleges:', err);
+      setError('Failed to load colleges');
+    } finally {
+      setLoadingColleges(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate college requirement for event_lead
+    if (formData.role === 'event_lead' && !formData.college) {
+      setError('College is required for event_lead role');
+      return;
+    }
+
     try {
       const token = Cookies.get('authToken');
       const baseUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -78,12 +112,14 @@ export default function UsersPage() {
         username: '',
         email: '',
         role: 'user',
+        college: '',
         isVerified: true,
         password: ''
       });
-    } catch (err) {
+      setError(null);
+    } catch (err: any) {
       console.error('Error saving user:', err);
-      setError('Failed to save user');
+      setError(err.response?.data?.message || 'Failed to save user');
     }
   };
 
@@ -93,9 +129,16 @@ export default function UsersPage() {
       username: user.username,
       email: user.email,
       role: user.role,
+      college: user.college || '',
       isVerified: user.isVerified,
       password: ''
     });
+    
+    // Fetch colleges if editing an event_lead or role might change to event_lead
+    if (user.role === 'event_lead' || colleges.length === 0) {
+      fetchColleges();
+    }
+    
     setShowAddModal(true);
   };
 
@@ -132,9 +175,11 @@ export default function UsersPage() {
               username: '',
               email: '',
               role: 'user',
+              college: '',
               isVerified: true,
               password: ''
             });
+            fetchColleges(); // Fetch colleges when opening modal
             setShowAddModal(true);
           }}
           className="flex items-center px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
@@ -235,6 +280,30 @@ export default function UsersPage() {
                     {/* <option value="sub-admin">Sub Admin</option> */}
                   </select>
                 </div>
+                {formData.role === 'event_lead' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      College <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.college}
+                      onChange={(e) => setFormData({ ...formData, college: e.target.value })}
+                      className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      required
+                    >
+                      <option value="">Select a college</option>
+                      {loadingColleges ? (
+                        <option value="">Loading colleges...</option>
+                      ) : (
+                        colleges.map((college) => (
+                          <option key={college._id} value={college._id}>
+                            {college.name}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Verification Status</label>
                   <select
@@ -269,9 +338,11 @@ export default function UsersPage() {
                       username: '',
                       email: '',
                       role: 'user',
+                      college: '',
                       isVerified: true,
                       password: ''
                     });
+                    setError(null);
                   }}
                   className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
                 >

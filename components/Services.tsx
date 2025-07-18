@@ -7,6 +7,7 @@ import React, {
   useState,
 } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import toast from "react-hot-toast";
 import {
   ArrowRight,
   Star,
@@ -324,7 +325,7 @@ function ConsultationForm({
   const { register, handleSubmit, reset, formState } = useForm();
   const onSubmit = (data: any) => {
     // TODO: Send data to your API
-    alert("Consultation request submitted!");
+    toast.success("Consultation request submitted!");
     reset();
     onOpenChange(false);
   };

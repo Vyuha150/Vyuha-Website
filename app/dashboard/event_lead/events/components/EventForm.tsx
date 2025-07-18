@@ -394,7 +394,7 @@ export default function EventForm({ initialData, isEditing = false, eventId, onS
                 <div className="space-y-0.5">
                   <FormLabel className="text-base text-black">College Event</FormLabel>
                   <FormDescription className="text-gray-500">
-                    Mark this event as a college event
+                    Mark this event as a college event. If enabled, the event will be associated with your college.
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -504,7 +504,7 @@ export default function EventForm({ initialData, isEditing = false, eventId, onS
                 <span className="text-black">Saving...</span>
               </div>
             ) : (
-              <span className="text-black">{isEditing ? 'Update Event' : 'Create Event'}</span>
+              <span className="text-white">{isEditing ? 'Update Event' : 'Create Event'}</span>
             )}
           </Button>
         </div>

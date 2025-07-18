@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { motion, useScroll, useTransform, Variants } from "framer-motion";
 import {
   ArrowRight,
@@ -10,8 +10,8 @@ import {
   Star,
 } from "lucide-react";
 import Image from "next/image";
-import router, { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 
 // Properly type the feature and article interfaces
@@ -22,9 +22,11 @@ interface Feature {
 }
 
 interface Article {
-  image: string;
+  _id: string;
   title: string;
   description: string;
+  image: string;
+  date: string;
 }
 
 // Animation variants - simplified for better performance
@@ -124,9 +126,14 @@ const NewsCard = React.memo(
                 className="object-cover rounded-lg"
               />
             </div>
-            <DialogDescription className="text-gray-300 text-base text-center mt-2">
-              {article.description}
-            </DialogDescription>
+            <div className="text-center space-y-3">
+              <div className="flex justify-center space-x-4 text-sm text-orange-300">
+                <span className="bg-blue-500/20 px-3 py-1 rounded-full">{new Date(article.date).toLocaleDateString()}</span>
+              </div>
+              <DialogDescription className="text-gray-300 text-base text-center mt-4">
+                {article.description}
+              </DialogDescription>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -139,61 +146,9 @@ NewsCard.displayName = "NewsCard";
 const ParticleBackground = () => {
   return (
     <div className="absolute inset-0 z-[1] overflow-hidden">
-      <style jsx>{`
-        .particle-container {
-          position: absolute;
-          inset: 0;
-          overflow: hidden;
-        }
-        .glow-1,
-        .glow-2 {
-          position: absolute;
-          border-radius: 50%;
-          filter: blur(100px);
-        }
-        .glow-1 {
-          top: 33%;
-          left: 50%;
-          width: 600px;
-          height: 600px;
-          background: rgba(249, 115, 22, 0.15);
-          transform: translateX(-50%);
-          animation: pulse1 8s infinite ease-in-out;
-        }
-        .glow-2 {
-          bottom: 25%;
-          right: 25%;
-          width: 300px;
-          height: 300px;
-          background: rgba(249, 115, 22, 0.1);
-          animation: pulse2 6s 2s infinite ease-in-out;
-        }
-        @keyframes pulse1 {
-          0%,
-          100% {
-            opacity: 0.3;
-            transform: translateX(-50%) scale(0.8);
-          }
-          50% {
-            opacity: 0.6;
-            transform: translateX(-50%) scale(1);
-          }
-        }
-        @keyframes pulse2 {
-          0%,
-          100% {
-            opacity: 0.2;
-            transform: scale(1);
-          }
-          50% {
-            opacity: 0.4;
-            transform: scale(0.8);
-          }
-        }
-      `}</style>
-      <div className="particle-container">
-        <div className="glow-1"></div>
-        <div className="glow-2"></div>
+      <div className="particle-container absolute inset-0 overflow-hidden">
+        <div className="glow-1 absolute top-1/3 left-1/2 w-[600px] h-[600px] bg-orange-500/15 rounded-full blur-[100px] -translate-x-1/2 animate-pulse"></div>
+        <div className="glow-2 absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-orange-500/10 rounded-full blur-[100px] animate-pulse"></div>
       </div>
     </div>
   );
@@ -205,6 +160,42 @@ const Achievements = () => {
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [900, 1200], [20, 0], { clamp: true });
   const opacity = useTransform(scrollY, [900, 1200], [0, 1], { clamp: true });
+  const [achievements, setAchievements] = useState<Article[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch achievements from API
+  useEffect(() => {
+    const fetchAchievements = async () => {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+        const response = await axios.get(`${baseUrl}/api/achievements/latest`);
+        setAchievements(response.data);
+      } catch (error) {
+        console.error('Error fetching achievements:', error);
+        // Fallback to static data if API fails
+        setAchievements([
+          {
+            _id: '1',
+            image: "/news/new1.jpg",
+            title: "Vyuha's Health Camp Recognized by APSACS",
+            description: "Vyuha's health camp was recognized by APSACS for its outstanding service, providing free health checkups and awareness sessions to hundreds of students and community members.",
+            date: "2024-01-15",
+          },
+          {
+            _id: '2',
+            image: "/news/new2.jpg",
+            title: "Innovation Fest Gains Media Attention",
+            description: "The Innovation Fest organized by Vyuha attracted significant media attention, showcasing student-led projects and technological advancements.",
+            date: "2024-02-20",
+          }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAchievements();
+  }, []);
 
   // Memoize static data
   const features = useMemo<Feature[]>(
@@ -231,40 +222,9 @@ const Achievements = () => {
     []
   );
 
-  const newspaperArticles = useMemo<Article[]>(
-    () => [
-      {
-        image: "/news/new1.jpg",
-        title: "Vyuha's Health Camp Recognized by APSACS",
-        description: "Vyuha's health camp was recognized by APSACS for its outstanding service, providing free health checkups and awareness sessions to hundreds of students and community members. The initiative was widely covered in the local press for its impact and outreach.",
-      },
-      {
-        image: "/news/new2.jpg",
-        title: "Innovation Fest Gains Media Attention",
-        description: "The Innovation Fest organized by Vyuha attracted significant media attention, showcasing student-led projects and technological advancements. The event fostered creativity and collaboration among participants, making headlines in regional newspapers.",
-      },
-      {
-        image: "/news/new3.jpg",
-        title: "Students Launch New Startup with Vyuha",
-        description: "A group of students, mentored by Vyuha, successfully launched a new startup, receiving accolades from the press for their entrepreneurial spirit and innovative solutions. The story was featured as a testament to Vyuha's commitment to nurturing young talent.",
-      },
-      {
-        image: "/news/new4.png",
-        title: "Students Launch New Startup with Vyuha",
-        description: "A group of students, mentored by Vyuha, successfully launched a new startup, receiving accolades from the press for their entrepreneurial spirit and innovative solutions. The story was featured as a testament to Vyuha's commitment to nurturing young talent.",
-      },
-      {
-        image: "/news/new5.png",
-        title: "Students Launch New Startup with Vyuha",
-        description: "A group of students, mentored by Vyuha, successfully launched a new startup, receiving accolades from the press for their entrepreneurial spirit and innovative solutions. The story was featured as a testament to Vyuha's commitment to nurturing young talent.",
-      },
-    ],
-    []
-  );
-
   // Memoized event handler
   const handleExploreClick = useCallback(() => {
-    router.push("/origin");
+    router.push("/achievements");
   }, []);
 
   return (
@@ -304,8 +264,8 @@ const Achievements = () => {
 
         {/* Features grid - render only if above fold */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {features.map((feature, index) => (
-            <FeatureCard key={index} feature={feature} index={index} />
+          {features.map((feature, featureIndex) => (
+            <FeatureCard key={`feature-${featureIndex}`} feature={feature} index={featureIndex} />
           ))}
         </div>
 
@@ -341,9 +301,15 @@ const Achievements = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {newspaperArticles.map((article, index) => (
-              <NewsCard key={index} article={article} index={index} />
-            ))}
+            {loading ? (
+              <div className="col-span-3 flex justify-center items-center py-12">
+                <div className="text-white">Loading achievements...</div>
+              </div>
+            ) : (
+              achievements.map((article, index) => (
+                <NewsCard key={article._id} article={article} index={index} />
+              ))
+            )}
           </div>
         </motion.div>
 

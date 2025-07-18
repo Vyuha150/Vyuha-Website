@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -67,14 +68,14 @@ export default function AddJobPage() {
       });
 
       if (response.status === 201) {
-        alert("Job added successfully!");
+        toast.success("Job added successfully!");
         router.push("/career"); // Redirect to the jobs page
       } else {
-        alert("Failed to add job. Please try again.");
+        toast.error("Failed to add job. Please try again.");
       }
     } catch (error) {
       console.error("Error adding job:", error);
-      alert("An error occurred while adding the job.");
+      toast.error("An error occurred while adding the job.");
     } finally {
       setIsSubmitting(false);
     }

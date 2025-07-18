@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -87,15 +88,14 @@ export default function PodcastPartnerForm() {
       });
 
       if (response.status === 201) {
-        alert("Thank you for your submission!");
+        toast.success("Thank you for your submission!");
         form.reset();
       } else {
         throw new Error("Failed to submit the form");
       }
     } catch (error: any) {
       console.error("Error submitting form:", error);
-      alert(
-        error.response?.data?.message || "An error occurred. Please try again."
+      toast.error(error.response?.data?.message || "An error occurred. Please try again."
       );
     }
   };
@@ -113,15 +113,14 @@ export default function PodcastPartnerForm() {
       );
 
       if (response.status === 201) {
-        alert("Thank you for your podcast request! We'll get back to you soon.");
+        toast.success("Thank you for your podcast request! We'll get back to you soon.");
         podcastRequestForm.reset();
       } else {
         throw new Error("Failed to submit the podcast request");
       }
     } catch (error: any) {
       console.error("Error submitting podcast request:", error);
-      alert(
-        error.response?.data?.message || "An error occurred. Please try again."
+      toast.error(error.response?.data?.message || "An error occurred. Please try again."
       );
     }
   };

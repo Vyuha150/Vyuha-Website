@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import axios from "axios";
 
 interface Review {
@@ -86,17 +87,17 @@ export default function MentorDetailsPage({
       );
 
       if (response.status === 201) {
-        alert(`Session booked with ${mentor.name}!`);
+        toast.success(`Session booked with ${mentor.name}!`);
         closeBookingModal();
       } else {
-        alert("Failed to book session. Please try again.");
+        toast.error("Failed to book session. Please try again.");
       }
     } catch (error: any) {
       if (error.response && error.response.status === 409) {
-        alert(error.response.data.message);
+        toast.error(error.response.data.message);
       } else {
         console.error("Error booking session:", error);
-        alert("An error occurred while booking the session.");
+        toast.error("An error occurred while booking the session.");
       }
     }
   };
@@ -115,11 +116,11 @@ export default function MentorDetailsPage({
         setNewReview({ user: "", rating: 0, comment: "" });
         closeReviewModal();
       } else {
-        alert("Failed to submit review. Please try again.");
+        toast.error("Failed to submit review. Please try again.");
       }
     } catch (error) {
       console.error("Error submitting review:", error);
-      alert("An error occurred while submitting the review.");
+      toast.error("An error occurred while submitting the review.");
     }
   };
 

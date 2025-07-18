@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import axios from "axios";
 
 export default function FormTeamPage() {
@@ -33,7 +34,7 @@ export default function FormTeamPage() {
         members: membersArray,
       });
       if (res.status === 201) {
-        alert("Your team has been successfully created!");
+        toast.success("Your team has been successfully created!");
         setFormData({
           teamName: "",
           mission: "",
@@ -42,7 +43,7 @@ export default function FormTeamPage() {
         });
       }
     } catch (err) {
-      alert("Failed to create team.");
+      toast.error("Failed to create team.");
     }
   };
 

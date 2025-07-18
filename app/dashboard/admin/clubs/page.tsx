@@ -5,6 +5,7 @@ import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import SmallLoader from '@/components/SmallLoader';
+import toast from 'react-hot-toast';
 
 interface Club {
   _id: string;

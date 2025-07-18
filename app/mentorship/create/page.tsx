@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import Cookies from "js-cookie";
 import axios from "axios";
 
@@ -68,7 +69,7 @@ export default function CreateMentorPage() {
       );
 
       if (response.status === 201) {
-        alert("Mentor created successfully!");
+        toast.success("Mentor created successfully!");
         setFormData({
           name: "",
           skills: "",
@@ -79,17 +80,17 @@ export default function CreateMentorPage() {
         });
         setPhoto(null); // Reset the photo file
       } else {
-        alert("Failed to create mentor. Please try again.");
+        toast.error("Failed to create mentor. Please try again.");
       }
     } catch (error: any) {
       if (error.response && error.response.data && error.response.data.errors) {
         console.error("Validation Errors:", error.response.data.errors);
-        alert(
+        toast.error(
           "Validation Errors: " + JSON.stringify(error.response.data.errors)
         );
       } else {
         console.error("Error creating mentor:", error);
-        alert("An error occurred while creating the mentor.");
+        toast.error("An error occurred while creating the mentor.");
       }
     } finally {
       setIsSubmitting(false);

@@ -13,6 +13,7 @@ import {
   LogOut,
   MinusIcon,
   Minus,
+  LayoutDashboard,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "/public/logo.png";
@@ -35,6 +36,7 @@ const connectLinks = [
   { name: "Team", href: "/team"},
   { name: "Clubs", href: "/club-partner" },
   { name: "Membership", href: "/membership" },
+  { name: "Achievements", href: "/achievements" },
   { name: "Podcast Connect", href: "/podcast-partner" },
   { name: "Career Boost", href: "/path" },
   { name: "Organizations", href: "/organizations" },
@@ -67,6 +69,7 @@ export default function Navbar() {
   const [showAdditionalMenu, setShowAdditionalMenu] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -82,6 +85,9 @@ export default function Navbar() {
       const authToken = Cookies.get("authToken");
       setIsLoggedIn(!!authToken);
       setIsVccMember(hasRole('vcc_member'));
+      // Try to get user role from localStorage or cookies
+      const storedRole = Cookies.get("role");
+      if (storedRole) setUserRole(storedRole);
     }
   }, []);
 
@@ -270,6 +276,17 @@ export default function Navbar() {
                 >
                   {isLoggedIn ? (
                     <>
+                      {/* Dashboard Option for admin or event_lead */}
+                      {(userRole === "admin" || userRole === "event_lead") && (
+                        <Link
+                          href={`/dashboard/${userRole}`}
+                          className="block px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"
+                          onClick={() => setShowProfileMenu(false)}
+                        >
+                          <LayoutDashboard className="inline w-4 h-4 mr-2" />
+                          <span>Dashboard</span>
+                        </Link>
+                      )}
                       <Link
                         href="/profile"
                         className="block px-4 py-2 text-sm text-white hover:bg-orange-500/20 transition-all"

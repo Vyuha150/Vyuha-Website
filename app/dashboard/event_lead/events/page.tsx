@@ -51,11 +51,13 @@ interface Event {
   isRegistrationFull?: boolean;
   registrations: Array<{
     _id: string;
-    userId: {
+    userId?: {
       _id: string;
       username: string;
       email: string;
     };
+    name?: string; // For backward compatibility
+    email?: string; // For backward compatibility
     registeredAt: string;
   }>;
 }
@@ -82,6 +84,7 @@ export default function EventLeadEvents() {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      console.log(response.data);
       setEvents(response.data);
       setFilteredEvents(response.data); // Initialize filtered events
     } catch (err) {
@@ -333,8 +336,12 @@ export default function EventLeadEvents() {
               <TableBody>
                 {selectedEventForRegistrations?.registrations.map((registration) => (
                   <TableRow key={registration._id}>
-                    <TableCell className="font-medium text-black">{registration.userId.username}</TableCell>
-                    <TableCell className="text-black">{registration.userId.email}</TableCell>
+                    <TableCell className="font-medium text-black">
+                      {registration.userId?.username || registration.name || "Unknown"}
+                    </TableCell>
+                    <TableCell className="text-black">
+                      {registration.userId?.email || registration.email || "Unknown"}
+                    </TableCell>
                     <TableCell className="text-black">
                       {new Date(registration.registeredAt).toLocaleDateString()} {new Date(registration.registeredAt).toLocaleTimeString()}
                     </TableCell>
@@ -350,10 +357,10 @@ export default function EventLeadEvents() {
               </TableBody>
             </Table>
             <div className="mt-4 flex justify-end">
-              <Button variant="outline" onClick={() => setShowRegistrations(false)}>
+              <Button variant="default" onClick={() => setShowRegistrations(false)}>
                 Close
               </Button>
-            </div>
+             </div>
           </div>
         </DialogContent>
       </Dialog>
