@@ -78,16 +78,16 @@ export default function Layout({ children }: { children: ReactNode }) {
             // Default options for specific types
             success: {
               duration: 3000,
-              theme: {
-                primary: 'green',
-                secondary: 'black',
+              style: {
+                background: '#10b981',
+                color: '#fff',
               },
             },
             error: {
               duration: 4000,
-              theme: {
-                primary: 'red',
-                secondary: 'black',
+              style: {
+                background: '#ef4444',
+                color: '#fff',
               },
             },
           }}

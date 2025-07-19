@@ -60,26 +60,30 @@ interface Organization {
   eventsHosted: number;
   verified: boolean;
   region?: string; // Optional, in case some orgs don't have it
+  createdAt: string; // Add missing property
+  registerAs?: string; // Add missing property
 }
 
 export default function OrganizationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [domainFilter, setDomainFilter] = useState("");
   const [regionFilter, setRegionFilter] = useState("");
-  const [featuredOrgs, setFeaturedOrgs] = useState([]);
-  const [newlyJoined, setNewlyJoined] = useState([]);
+  const [featuredOrgs, setFeaturedOrgs] = useState<Organization[]>([]);
+  const [newlyJoined, setNewlyJoined] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchOrganizations = async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/organization/public`);
         if (!response.ok) throw new Error('Failed to fetch organizations');
-        const data = await response.json();
+        const data: Organization[] = await response.json();
         
         // Sort organizations by createdAt date
-        const sortedOrgs = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const sortedOrgs = data.sort((a: Organization, b: Organization) => 
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
         
         // Featured orgs are organizations
         const featured = sortedOrgs.filter(org => org.registerAs === 'organization').slice(0, 3);
@@ -89,7 +93,7 @@ export default function OrganizationsPage() {
         setFeaturedOrgs(featured);
         setNewlyJoined(newJoined);
       } catch (err) {
-        setError(err.message);
+        setError(err instanceof Error ? err.message : 'An error occurred');
       } finally {
         setLoading(false);
       }

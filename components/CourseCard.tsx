@@ -11,7 +11,7 @@ interface Course {
   coursePhoto?: string;
   rating: number;
   reviews: number;
-  price: number;
+  price: string;
   format: string;
   description: string;
   duration: string;
@@ -63,7 +63,7 @@ export default function CourseCard({ course }: { course: Course }) {
 
         {/* Price */}
         <div className="text-sm text-orange-500 font-semibold mb-4">
-          ₹{course.price}
+          {course.price}
         </div>
 
         {/* Description */}

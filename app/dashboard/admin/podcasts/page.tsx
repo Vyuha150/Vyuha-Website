@@ -7,7 +7,6 @@ import axios from 'axios';
 import Cookies from 'js-cookie';
 import SmallLoader from '@/components/SmallLoader';
 import PodcastCard from '@/components/PodcastCard';
-import { toast } from 'react-hot-toast';
 
 interface Podcast {
   _id: string;
@@ -203,18 +202,44 @@ export default function PodcastsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this podcast?')) {
-      try {
-        const token = Cookies.get('authToken');
-        await axios.delete(`${baseUrl}/api/podcasts/${id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        toast.success('Podcast deleted successfully');
-        fetchPodcasts();
-      } catch (error) {
-        console.error('Error deleting podcast:', error);
-        toast.error('Failed to delete podcast');
-      }
+    // Show confirmation toast
+    toast((t) => (
+      <div className="flex flex-col gap-2">
+        <span>Are you sure you want to delete this podcast?</span>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              toast.dismiss(t.id);
+              performDelete(id);
+            }}
+            className="bg-red-500 text-white px-3 py-1 rounded text-sm"
+          >
+            Delete
+          </button>
+          <button
+            onClick={() => toast.dismiss(t.id)}
+            className="bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ), {
+      duration: 10000,
+    });
+  };
+
+  const performDelete = async (id: string) => {
+    try {
+      const token = Cookies.get('authToken');
+      await axios.delete(`${baseUrl}/api/podcasts/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Podcast deleted successfully');
+      fetchPodcasts();
+    } catch (error) {
+      console.error('Error deleting podcast:', error);
+      toast.error('Failed to delete podcast');
     }
   };
 

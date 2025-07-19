@@ -74,6 +74,32 @@ export default function EventLeadEvents() {
   const [eventTypeFilter, setEventTypeFilter] = useState<'all' | 'college' | 'non-college'>('all');
   const [vccFilter, setVccFilter] = useState<'all' | 'vcc' | 'non-vcc'>('all');
 
+  // Function to convert Event to EventFormData
+  const convertEventToFormData = (event: Event) => {
+    return {
+      name: event.name,
+      description: '', // Event interface doesn't have description, will be empty for editing
+      date: event.date,
+      time: event.time,
+      location: event.location,
+      organizer: '', // Event interface doesn't have organizer, will be empty for editing
+      organizerBio: '', // Event interface doesn't have organizerBio, will be empty for editing
+      organizerPhoto: '', // Event interface doesn't have organizerPhoto, will be empty for editing
+      platformLink: '',
+      fees: '',
+      materials: '',
+      isRecorded: false,
+      isVccEvent: event.isVccEvent || false,
+      incollege: event.incollege,
+      registrationLimit: event.registrationLimit || undefined,
+      image: '', // Event interface doesn't have image, will be empty for editing
+      category: event.category,
+      mode: event.mode as 'online' | 'offline',
+      targetAudience: '',
+      logo: '', // Event interface doesn't have logo, will be empty for editing
+    };
+  };
+
   const fetchEvents = async () => {
     try {
       const token = Cookies.get('authToken');
@@ -309,7 +335,7 @@ export default function EventLeadEvents() {
             </DialogTitle>
           </DialogHeader>
           <EventForm
-            initialData={selectedEvent || undefined}
+            initialData={selectedEvent ? convertEventToFormData(selectedEvent) : undefined}
             isEditing={!!selectedEvent}
             eventId={selectedEvent?._id}
             onSuccess={handleModalClose}

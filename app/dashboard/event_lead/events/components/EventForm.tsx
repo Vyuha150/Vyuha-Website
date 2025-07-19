@@ -67,7 +67,7 @@ export default function EventForm({ initialData, isEditing = false, eventId, onS
   const router = useRouter();
 
   const form = useForm<EventFormData>({
-    resolver: zodResolver(eventSchema),
+    resolver: zodResolver(eventSchema) as any,
     defaultValues: initialData || {
       name: '',
       description: '',
